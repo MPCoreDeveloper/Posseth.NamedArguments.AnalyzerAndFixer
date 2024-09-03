@@ -10,21 +10,38 @@
   <PropertyGroup>
     <PackageId>Posseth.NamedArguments.AnalyzerAndFixer</PackageId>
     <PackageVersion>1.0.0.0</PackageVersion>
-    <Authors>Posse</Authors>
-    <PackageLicenseUrl>http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE</PackageLicenseUrl>
-    <PackageProjectUrl>http://PROJECT_URL_HERE_OR_DELETE_THIS_LINE</PackageProjectUrl>
-    <PackageIconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</PackageIconUrl>
-    <RepositoryUrl>http://REPOSITORY_URL_HERE_OR_DELETE_THIS_LINE</RepositoryUrl>
+    <Authors>MPCoreDeveloper</Authors>
+    <PackageLicenseUrl>https://github.com/MPCoreDeveloper/Posseth.NamedArguments.AnalyzerAndFixer</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/MPCoreDeveloper/Posseth.NamedArguments.AnalyzerAndFixer</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/MPCoreDeveloper/Posseth.NamedArguments.AnalyzerAndFixer</RepositoryUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <Description>Posseth.NamedArguments.AnalyzerAndFixer</Description>
-    <PackageReleaseNotes>Summary of changes made in this release of the package.</PackageReleaseNotes>
-    <Copyright>Copyright</Copyright>
-    <PackageTags>Posseth.NamedArguments.AnalyzerAndFixer, analyzers</PackageTags>
+    <Description>This tool analyzes method calls to ensure they use named arguments and provides an option to automatically convert positional arguments to named arguments. For example, it can transform `TestMethod(1, 2)` into `TestMethod(x: 1, y: 2)`.
+ </Description>
+    <PackageReleaseNotes>initial release</PackageReleaseNotes>
+    <Copyright>Free to use , distribute and modify </Copyright>
+    <PackageTags>NamedArguments;AnalyzerAndFixer;analyzers;</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>
     <NoPackageAnalysis>true</NoPackageAnalysis>
-
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzersToOutput</TargetsForTfmSpecificContentInPackage>
+    <Title>Named Arguments Analyzer and Fixer</Title>
+    <Version>1.0.0</Version>
+    <Company>Posseth Software</Company>
+    <Product>Posseth.NamedArguments.AnalyzerAndFixer</Product>
+    <PackageIcon>logo.jpeg</PackageIcon>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\Assets\logo.jpeg">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Posseth.NamedArguments.AnalyzerAndFixer.CodeFixes\Posseth.NamedArguments.AnalyzerAndFixer.CodeFixes.csproj" />

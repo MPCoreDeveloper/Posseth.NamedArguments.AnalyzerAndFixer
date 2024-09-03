@@ -2,7 +2,12 @@
 # Set default behavior to automatically normalize line endings.
 ###############################################################################
 * text=auto
+# Ignore PowerShell scripts for language statistics
+*.ps1 linguist-language=PowerShell
+*.ps1 linguist-vendored
 
+# Force C# as the primary language
+*.cs linguist-language=C#
 ###############################################################################
 # Set default behavior for command prompt diff.
 #

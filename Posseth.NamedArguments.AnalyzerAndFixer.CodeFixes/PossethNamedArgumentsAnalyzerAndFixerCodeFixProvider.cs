@@ -15,7 +15,7 @@ using System.Xml.Linq;
 namespace Posseth.NamedArguments.AnalyzerAndFixer
 {
    [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(NamedArgumentsCodeFixProvider)), Shared]
-public class NamedArgumentsCodeFixProvider : CodeFixProvider
+    public class NamedArgumentsCodeFixProvider : CodeFixProvider
     {
         private const string Title = "Use named argument";
 
@@ -39,6 +39,7 @@ public class NamedArgumentsCodeFixProvider : CodeFixProvider
                     equivalenceKey: Title),
                 diagnostic);
         }
+
         private async Task<Document> UseNamedArgumentAsync(Document document, ArgumentSyntax argument, CancellationToken cancellationToken)
         {
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
@@ -47,7 +48,7 @@ public class NamedArgumentsCodeFixProvider : CodeFixProvider
 
             if (invocation == null)
             {
-                // Als de parent geen InvocationExpressionSyntax is, kunnen we de fix niet toepassen
+                // If the parent is not an InvocationExpressionSyntax, we cannot apply the fix
                 return document;
             }
 
@@ -55,7 +56,7 @@ public class NamedArgumentsCodeFixProvider : CodeFixProvider
 
             if (methodSymbol == null)
             {
-                // Als methodSymbol null is, kunnen we de fix niet toepassen
+                // If methodSymbol is null, we cannot apply the fix
                 return document;
             }
 
@@ -63,13 +64,13 @@ public class NamedArgumentsCodeFixProvider : CodeFixProvider
 
             if (parameter == null)
             {
-                // Als parameter null is, kunnen we de fix niet toepassen
+                // If parameter is null, we cannot apply the fix
                 return document;
             }
 
-            // Maak een nieuwe argument node met een NameColon
+            // Create a new argument node with a NameColon
             var namedArgument = SyntaxFactory.Argument(
-                SyntaxFactory.NameColon(parameter.Name), // Hier voeg je de naam van de parameter toe
+                SyntaxFactory.NameColon(parameter.Name), // Here you add the name of the parameter
                 argument.RefOrOutKeyword,
                 argument.Expression);
 
@@ -78,6 +79,5 @@ public class NamedArgumentsCodeFixProvider : CodeFixProvider
 
             return document.WithSyntaxRoot(newRoot);
         }
-
     }
 }

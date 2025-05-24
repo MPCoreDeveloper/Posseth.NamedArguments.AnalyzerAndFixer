@@ -10,7 +10,7 @@ There should be a NuGet package available for this project.
 <b>How to Configure Settings for NamedArgumentsAnalyzer</b>
 
 OnlyForRecords is a boolean 
-ExcludedMethodNames is a comma-separated list of method names yu want to exclude from the analyzer.
+ExcludedMethodNames is a comma-separated list of method names you may want to exclude from the analyzer.
 
 the following list of method names are excluded by default:Where, Select, FirstOrDefault, First, Any,
             OrderBy, OrderByDescending, GroupBy, ToList, ToArray,

@@ -1,15 +1,18 @@
 ﻿using System;
-[AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
-public sealed class RuleConfigurationOptionAttribute : Attribute
+namespace Posseth.NamedArguments.AnalyzerAndFixer
 {
-    public string Name { get; }
-    public string Description { get; }
-    public string DefaultValue { get; }
-
-    public RuleConfigurationOptionAttribute(string name, string description, string defaultValue)
+    [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
+    public sealed class RuleConfigurationOptionAttribute : Attribute
     {
-        Name = name;
-        Description = description;
-        DefaultValue = defaultValue;
+        public string Name { get; }
+        public string Description { get; }
+        public string DefaultValue { get; }
+
+        public RuleConfigurationOptionAttribute(string name, string description, string defaultValue)
+        {
+            Name = name;
+            Description = description;
+            DefaultValue = defaultValue;
+        }
     }
 }

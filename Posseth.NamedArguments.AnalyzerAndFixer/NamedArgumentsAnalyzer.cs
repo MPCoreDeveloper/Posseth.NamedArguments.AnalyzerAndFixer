@@ -1,6 +1,7 @@
-﻿
-//Michel Posseth 2025-05-17
+﻿//Michel Posseth 2025-05-17
 //Multiple code fixes for the same diagnostic ID 
+//Michel Posseth 2025-06-03
+//Extra options and record fix 
 using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -17,12 +18,35 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
         public const string DiagnosticId = "PNA1000"; // Posseth NamedArguments analyzer
         private static readonly LocalizableString Title = "Use named arguments";
         private static readonly LocalizableString MessageFormat = "Argument '{0}' should be named";
-        private static readonly LocalizableString Description = "All arguments should be named";
+        private static readonly LocalizableString Description = "All arguments should be named.";
         private const string Category = "Naming";
 
         private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
+        private static readonly DiagnosticDescriptor InfoRule = new DiagnosticDescriptor(
+            DiagnosticId + "_Info",
+            "NamedArgumentsAnalyzer options",
+            "NamedArgumentsAnalyzer options: OnlyForRecords={0}, ExcludedMethodNames={1}, UseDefaultExcludedMethods={2}",
+            Category,
+            DiagnosticSeverity.Info,
+            isEnabledByDefault: true,
+            description: "Shows the current analyzer options."
+        );
+
+        private static readonly DiagnosticDescriptor DefaultMethodsRule = new DiagnosticDescriptor(
+            DiagnosticId + "_DefaultMethods",
+            "Default excluded methods",
+            "Default excluded methods: {0}",
+            Category,
+            DiagnosticSeverity.Info,
+            isEnabledByDefault: true,
+            description: "Shows the list of default excluded methods."
+        );
+
+        private bool _infoReported=true;
+
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => 
+            ImmutableArray.Create(Rule, InfoRule, DefaultMethodsRule);
 
         [RuleConfigurationOption("OnlyForRecords",
             "true: Only analyze method calls on record types; false: Analyze all method calls",
@@ -30,17 +54,35 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
         public bool OnlyForRecords { get; set; } = false;
 
         [RuleConfigurationOption("ExcludedMethodNames",
-            "Comma-separated list of method names to exclude from analysis",
+            "Comma-separated list of method names or fully qualified names (e.g., System.Linq.Enumerable.Where) to exclude from analysis",
             "")]
         public string ExcludedMethodNames { get; set; } = "";
+
+        [RuleConfigurationOption("UseDefaultExcludedMethods",
+            "true: Use the built-in list of default excluded methods; false: Do not use the default excluded methods",
+            "true")]
+        public bool UseDefaultExcludedMethods { get; set; } = true;
 
         // Common methods to exclude by default (in addition to user-specified ones)
         private readonly HashSet<string> DefaultExcludedMethods = new HashSet<string>
         {
-            "Where", "Select", "FirstOrDefault", "First", "Any",
-            "OrderBy", "OrderByDescending", "GroupBy", "ToList", "ToArray",
-            "Contains", "ElementAt", "ElementAtOrDefault", "IsNullOrEmpty", "IsNullOrWhiteSpace"
+            "System.Linq.Enumerable.Where",
+            "System.Linq.Enumerable.Select",
+            "System.Linq.Enumerable.FirstOrDefault",
+            "System.Linq.Enumerable.First",
+            "System.Linq.Enumerable.Any",
+            "System.Linq.Enumerable.OrderBy",
+            "System.Linq.Enumerable.OrderByDescending",
+            "System.Linq.Enumerable.GroupBy",
+            "System.Linq.Enumerable.ToList",
+            "System.Linq.Enumerable.ToArray",
+            "System.Linq.Enumerable.Contains",
+            "System.Linq.Enumerable.ElementAt",
+            "System.Linq.Enumerable.ElementAtOrDefault",
+            "System.String.IsNullOrEmpty",
+            "System.String.IsNullOrWhiteSpace"
         };
+        private static readonly char[] separator = new[] { ',' };
 
         public override void Initialize(AnalysisContext context)
         {
@@ -58,14 +100,20 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
 
         private void AnalyzeInvocation(SyntaxNodeAnalysisContext context)
         {
+            // Report info diagnostic once per compilation (first invocation)
+            if (!_infoReported)
+            {
+                ReportInfoDiagnostic(context);
+                _infoReported = true;
+            }
+
             var invocation = (InvocationExpressionSyntax)context.Node;
-            var methodSymbol = context.SemanticModel.GetSymbolInfo(invocation).Symbol as IMethodSymbol;
-            
-            if (methodSymbol == null)
+
+            if (!(context.SemanticModel.GetSymbolInfo(invocation).Symbol is IMethodSymbol methodSymbol))
                 return;
 
-            // Check if the method is excluded
-            if (IsMethodExcluded(methodSymbol.Name))
+            // Check if the method is excluded (pass methodSymbol for full name check)
+            if (IsMethodExcluded(methodSymbol.Name, methodSymbol))
                 return;
 
             // If OnlyForRecords is enabled, check if the containing type is a record
@@ -94,7 +142,40 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             }
         }
 
-        private static  string GetParameterName(ArgumentSyntax arg, InvocationExpressionSyntax invocation, IMethodSymbol methodSymbol, SemanticModel semanticModel)
+        /// <summary>
+        /// Reports an info diagnostic to inform the user about the current analyzer options.
+        /// </summary>
+        private void ReportInfoDiagnostic(SyntaxNodeAnalysisContext context)
+        {
+            // Attach to the root node so it appears once per file/compilation
+            var location = context.Node.SyntaxTree.GetRoot().GetLocation();
+            
+            // Build the diagnostic message
+            var diagnostic = Diagnostic.Create(
+                InfoRule,
+                location,
+                OnlyForRecords.ToString(),
+                string.IsNullOrEmpty(ExcludedMethodNames) ? "(none)" : ExcludedMethodNames,
+                UseDefaultExcludedMethods.ToString()
+            );
+            
+            context.ReportDiagnostic(diagnostic);
+            
+            // If default excluded methods are enabled, report them in a separate diagnostic
+            if (UseDefaultExcludedMethods && DefaultExcludedMethods.Count > 0)
+            {
+                var defaultMethodsStr = string.Join(", ", DefaultExcludedMethods);
+                var defaultMethodsInfo = Diagnostic.Create(
+                    DefaultMethodsRule,
+                    location,
+                    defaultMethodsStr
+                );
+                
+                context.ReportDiagnostic(defaultMethodsInfo);
+            }
+        }
+
+        private static string GetParameterName(ArgumentSyntax arg, InvocationExpressionSyntax invocation, IMethodSymbol methodSymbol, SemanticModel semanticModel)
         {
             int argIndex = invocation.ArgumentList.Arguments.IndexOf(arg);
             if (argIndex < methodSymbol.Parameters.Length)
@@ -104,32 +185,62 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             return arg.Expression.ToString();
         }
 
-        private static  INamedTypeSymbol GetContainingType(InvocationExpressionSyntax invocation, SemanticModel semanticModel)
+        private static INamedTypeSymbol GetContainingType(InvocationExpressionSyntax invocation, SemanticModel semanticModel)
         {
-            if (invocation.Expression is MemberAccessExpressionSyntax memberAccess)
+            // Get the method symbol from the invocation
+            var methodSymbol = semanticModel.GetSymbolInfo(invocation).Symbol as IMethodSymbol;
+            if (methodSymbol == null)
+                return null;
+                
+            // For extension methods, the real containing type is the first parameter type
+            if (methodSymbol.IsExtensionMethod && methodSymbol.Parameters.Length > 0)
             {
-                var typeInfo = semanticModel.GetTypeInfo(memberAccess.Expression);
-                return typeInfo.Type as INamedTypeSymbol;
+                return methodSymbol.Parameters[0].Type as INamedTypeSymbol;
             }
-            return null;
+            
+            // For regular methods, return the containing type
+            return methodSymbol.ContainingType;
         }
 
-        private bool IsMethodExcluded(string methodName)
+        private bool IsMethodExcluded(string methodName, IMethodSymbol methodSymbol = null)
         {
             if (string.IsNullOrEmpty(methodName))
                 return false;
-                
-            if (DefaultExcludedMethods.Contains(methodName))
-                return true;
-                
+
+            // Check default excluded methods (by fully qualified name) if enabled
+            if (UseDefaultExcludedMethods && methodSymbol != null)
+            {
+                var fullName = methodSymbol.ContainingType?.ToDisplayString() + "." + methodSymbol.Name;
+                if (DefaultExcludedMethods.Contains(fullName))
+                    return true;
+            }
+
             if (string.IsNullOrEmpty(ExcludedMethodNames))
                 return false;
 
-            var excludedMethods = ExcludedMethodNames.Split(',').Select(m => m.Trim());
-            return excludedMethods.Contains(methodName);
+            // Parse exclusion list: allow both simple and fully qualified names
+            var excludedMethods = ExcludedMethodNames
+                .Split(separator, StringSplitOptions.RemoveEmptyEntries)
+                .Select(m => m.Trim())
+                .Where(m => !string.IsNullOrEmpty(m))
+                .ToImmutableHashSet();
+
+            // Check for simple name
+            if (excludedMethods.Contains(methodName))
+                return true;
+
+            // Check for fully qualified name (Namespace.Type.Method)
+            if (methodSymbol != null)
+            {
+                var fullName = methodSymbol.ContainingType?.ToDisplayString() + "." + methodSymbol.Name;
+                if (excludedMethods.Contains(fullName))
+                    return true;
+            }
+
+            return false;
         }
 
-        private static  bool IsRecord(INamedTypeSymbol type)
+        private static bool IsRecord(INamedTypeSymbol type)
         {
             if (type == null)
                 return false;

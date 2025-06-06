@@ -14,8 +14,10 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer.Test
         [TestMethod]
         public async Task NestedInvocations_AreFixed()
         {
-            // Create code with nested method calls
-            var test = @"
+            // Configuratie om Info-diagnostieken te negeren
+            var test = new VerifyCS.Test
+            {
+                TestCode = @"
 using System;
 
 class TimeProvider 
@@ -59,9 +61,8 @@ class Program
             )
         );
     }
-}";
-
-            var fixedTest = @"
+}",
+                FixedCode = @"
 using System;
 
 class TimeProvider 
@@ -104,21 +105,25 @@ objectKey: objectKey,
 expires: timeProvider.GetLocalNow().AddHours(value: 24))
         );
     }
-}";
-
-            // Expected diagnostics
-            var expected = new[]
-            {
-                // Arguments in the GetGetPresignedUrl method
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(39, 17).WithArguments("bucketName"),
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(40, 17).WithArguments("objectKey"),
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(41, 17).WithArguments("expires"),
-                
-                // Arguments in the AddHours method
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(41, 53).WithArguments("value"),
+}",
+                ExpectedDiagnostics = {
+                    // Arguments in the GetGetPresignedUrl method
+                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(39, 17).WithArguments("bucketName"),
+                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(40, 17).WithArguments("objectKey"),
+                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(41, 17).WithArguments("expires"),
+                    
+                    // Arguments in the AddHours method
+                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(41, 53).WithArguments("value"),
+                },
             };
+            
+            // Negeer Info-diagnostieken
+            test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", @"
+[*.cs]
+dotnet_analyzer_diagnostic.severity = warning
+"));
 
-            await VerifyCS.VerifyCodeFixAsync(test, expected, fixedTest);
+            await test.RunAsync();
         }
     }
 }

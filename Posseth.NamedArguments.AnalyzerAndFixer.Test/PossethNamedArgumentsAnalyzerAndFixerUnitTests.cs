@@ -1,4 +1,6 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.CodeAnalysis.Testing;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using VerifyCS = Posseth.NamedArguments.AnalyzerAndFixer.Test.CSharpCodeFixVerifier<
     Posseth.NamedArguments.AnalyzerAndFixer.NamedArgumentsAnalyzer,
@@ -298,5 +300,33 @@ class Program
 
             await VerifyCS.VerifyCodeFixAsync(testCode, expectedDiagnostics, fixedCode);
         }
+
+        [TestMethod]
+        public async Task Analyzer_Excludes_FullyQualifiedMethodName_ButNotCustom()
+        {
+            var test = @"
+    using System.Linq;
+    namespace MyNamespace
+    {
+        public class MyClass
+        {
+            public void Where(int x) { }
+            public void Test()
+            {
+                var arr = new int[] { 1, 2, 3 };
+                Where(1); // Custom method, should trigger diagnostic
+                Enumerable.Where(arr, i => i > 1); // Built-in, should NOT trigger diagnostic
+            }
+        }
     }
+    ";
+
+            // Use the exact location reported in the error message
+            var expected = VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
+                .WithSpan(11, 23, 11, 24) // This is the exact position of "1" in Where(1)
+                .WithArguments("x");
+            
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+    }   
 }

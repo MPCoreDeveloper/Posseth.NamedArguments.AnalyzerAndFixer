@@ -6,3 +6,5 @@
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 PNA1000 | Naming | Warning | NamedArgumentsAnalyzer
+PNA1000_DefaultMethods | Naming | Info | NamedArgumentsAnalyzer
+PNA1000_Info | Naming | Info | NamedArgumentsAnalyzer

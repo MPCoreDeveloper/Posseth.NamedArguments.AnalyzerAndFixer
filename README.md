@@ -9,12 +9,32 @@ There should be a NuGet package available for this project.
 ## configuration
 <b>How to Configure Settings for NamedArgumentsAnalyzer</b>
 
-OnlyForRecords is a boolean 
-ExcludedMethodNames is a comma-separated list of method names you may want to exclude from the analyzer.
+OnlyForRecords is a boolean and standard value is false.
+setting that determines whether the analyzer should only apply to record types. If set to true,
+the analyzer will only analyze named arguments in record types. If set to false,
+it will analyze named arguments in all types.
 
-the following list of method names are excluded by default:Where, Select, FirstOrDefault, First, Any,
-            OrderBy, OrderByDescending, GroupBy, ToList, ToArray,
-            Contains, ElementAt, ElementAtOrDefault,IsNullOrEmpty, IsNullOrWhiteSpace
+UseDefaultExcludedMethods is a boolean and standard value is true.
+if UseDefaultExcludedMethods is true, the following methods will be excluded by default:
+            "System.Linq.Enumerable.Where",
+            "System.Linq.Enumerable.Select",
+            "System.Linq.Enumerable.FirstOrDefault",
+            "System.Linq.Enumerable.First",
+            "System.Linq.Enumerable.Any",
+            "System.Linq.Enumerable.OrderBy",
+            "System.Linq.Enumerable.OrderByDescending",
+            "System.Linq.Enumerable.GroupBy",
+            "System.Linq.Enumerable.ToList",
+            "System.Linq.Enumerable.ToArray",
+            "System.Linq.Enumerable.Contains",
+            "System.Linq.Enumerable.ElementAt",
+            "System.Linq.Enumerable.ElementAtOrDefault",
+            "System.String.IsNullOrEmpty",
+            "System.String.IsNullOrWhiteSpace"
+
+ExcludedMethodNames is a comma-separated list of method names yu want to exclude from the analyzer.
+default value is "" thus empty.
+
 
 You can configure the OnlyForRecords and ExcludedMethodNames settings using an .editorconfig file. Here's how to do it:
 
@@ -29,6 +49,7 @@ Option 1: Using .editorconfig File
 
 # Configure OnlyForRecords option
 dotnet_diagnostic.PNA1000.OnlyForRecords = true  # or false
+dotnet_diagnostic.PNA1000.UseDefaultExcludedMethods = true  # or false
 
 # Configure ExcludedMethodNames option
 dotnet_diagnostic.PNA1000.ExcludedMethodNames = ToString,Equals,GetHashCode
@@ -57,6 +78,7 @@ Then create a .analyzer.config file with:
 ```ini
 is_global = true
 PNA1000.OnlyForRecords = true
+PNA1000.UseDefaultExcludedMethods = true
 PNA1000.ExcludedMethodNames = ToString,Equals,GetHashCode
 ```
 

@@ -96,6 +96,9 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
 
             // Register for invocation expressions instead of arguments directly
             context.RegisterSyntaxNodeAction(AnalyzeInvocation, SyntaxKind.InvocationExpression);
+            
+            // Register for object creation expressions (for records and classes)
+            context.RegisterSyntaxNodeAction(AnalyzeObjectCreation, SyntaxKind.ObjectCreationExpression);
         }
 
         private void AnalyzeInvocation(SyntaxNodeAnalysisContext context)
@@ -140,6 +143,65 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
                     }
                 }
             }
+        }
+
+        private void AnalyzeObjectCreation(SyntaxNodeAnalysisContext context)
+        {
+            // Report info diagnostic once per compilation (first invocation)
+            if (!_infoReported)
+            {
+                ReportInfoDiagnostic(context);
+                _infoReported = true;
+            }
+
+            var objectCreation = (ObjectCreationExpressionSyntax)context.Node;
+            
+            if (!(context.SemanticModel.GetSymbolInfo(objectCreation).Symbol is IMethodSymbol constructorSymbol))
+                return;
+                
+            // Check if the method is excluded (pass constructorSymbol for full name check)
+            string constructorName = constructorSymbol.ContainingType.Name + "." + constructorSymbol.Name;
+            if (IsMethodExcluded(constructorName, constructorSymbol))
+                return;
+                
+            // If OnlyForRecords is enabled, check if the type is a record
+            if (OnlyForRecords)
+            {
+                var typeSymbol = constructorSymbol.ContainingType;
+                bool isRecord = typeSymbol != null && IsRecord(typeSymbol);
+
+                if (!isRecord)
+                    return;
+            }
+            
+            // Analyze the arguments
+            if (objectCreation.ArgumentList != null)
+            {
+                foreach (var arg in objectCreation.ArgumentList.Arguments)
+                {
+                    if (arg.NameColon == null)
+                    {
+                        // Get parameter for this argument to include in diagnostic message
+                        string paramName = GetParameterNameForConstructor(arg, objectCreation, constructorSymbol, context.SemanticModel);
+                        if (!string.IsNullOrEmpty(paramName))
+                        {
+                            var diagnostic = Diagnostic.Create(Rule, arg.GetLocation(), paramName);
+                            context.ReportDiagnostic(diagnostic);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static string GetParameterNameForConstructor(ArgumentSyntax arg, ObjectCreationExpressionSyntax objectCreation, 
+            IMethodSymbol constructorSymbol, SemanticModel semanticModel)
+        {
+            int argIndex = objectCreation.ArgumentList.Arguments.IndexOf(arg);
+            if (argIndex < constructorSymbol.Parameters.Length)
+            {
+                return constructorSymbol.Parameters[argIndex].Name;
+            }
+            return arg.Expression.ToString();
         }
 
         /// <summary>
@@ -245,24 +307,89 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             if (type == null)
                 return false;
                 
-            // Method 1: Check for EqualityContract property (most reliable for .NET Standard 2.0)
+            // Method 1: Check IsRecord property directly through reflection
+            // This works for C# 9+ record declarations in newer Roslyn versions
+            try
+            {
+                var propertyInfo = type.GetType().GetProperty("IsRecord");
+                if (propertyInfo != null)
+                {
+                    var isRecordValue = propertyInfo.GetValue(type);
+                    if (isRecordValue is bool isRecord && isRecord)
+                        return true;
+                }
+            }
+            catch
+            {
+                // Reflection failed, continue with other detection methods
+            }
+            
+            // Method 2: Check for record keyword in declaration syntax (for C# 9+)
+            if (type.DeclaringSyntaxReferences.Length > 0)
+            {
+                try
+                {
+                    var syntax = type.DeclaringSyntaxReferences[0].GetSyntax();
+                    var syntaxType = syntax.GetType();
+                    var isRecordProperty = syntaxType.GetProperty("IsRecord");
+                    if (isRecordProperty != null)
+                    {
+                        var isRecordValue = isRecordProperty.GetValue(syntax);
+                        if (isRecordValue is bool isSyntaxRecord && isSyntaxRecord)
+                            return true;
+                    }
+                }
+                catch
+                {
+                    // Reflection failed, continue with other detection methods
+                }
+            }
+            
+            // Method 3: Check for record runtime characteristics
+            
+            // Check for record's generated Equals/GetHashCode overrides
+            bool hasSpecialEquals = type.GetMembers()
+                .Where(m => m.Name == "Equals" && m is IMethodSymbol)
+                .Any(m => ((IMethodSymbol)m).Parameters.Length == 1 && 
+                          ((IMethodSymbol)m).GetAttributes().Any(attr => 
+                              attr.AttributeClass?.Name == "CompilerGeneratedAttribute"));
+                              
+            // Check for EqualityContract property (most reliable for .NET Standard 2.0)
+            bool hasEqualityContract = false;
             foreach (var member in type.GetMembers())
             {
                 if (member.Name == "EqualityContract" && member is IPropertySymbol)
                 {
-                    return member.GetAttributes().Any(attr => 
+                    hasEqualityContract = member.GetAttributes().Any(attr => 
                         attr.AttributeClass?.Name == "CompilerGeneratedAttribute" ||
                         (attr.AttributeClass?.ContainingNamespace?.Name == "CompilerServices" &&
                          attr.AttributeClass?.ContainingNamespace?.ContainingNamespace?.Name == "Runtime"));
+                         
+                    if (hasEqualityContract)
+                        return true;
                 }
             }
             
-            // Method 2: Check for other record characteristics
+            // Method 4: Check for other record characteristics
             bool hasClone = type.GetMembers().Any(m => m.Name == "<Clone>$" && m is IMethodSymbol);
             bool hasPrintMembers = type.GetMembers().Any(m => m.Name == "PrintMembers" && m is IMethodSymbol);
             bool hasDeconstruct = type.GetMembers().Any(m => m.Name == "Deconstruct" && m is IMethodSymbol);
             
-            return hasClone || hasPrintMembers || hasDeconstruct;
+            // Method 5: Check for record-specific ToString override pattern
+            bool hasSpecialToString = type.GetMembers()
+                .Where(m => m.Name == "ToString" && m is IMethodSymbol)
+                .Any(m => ((IMethodSymbol)m).Parameters.Length == 0 && 
+                          ((IMethodSymbol)m).GetAttributes().Any(attr => 
+                              attr.AttributeClass?.Name == "CompilerGeneratedAttribute"));
+            
+            // Method 6: Check for property pattern with init-only setters (common in records)
+            bool hasInitOnlyProperties = type.GetMembers()
+                .Where(m => m is IPropertySymbol)
+                .Cast<IPropertySymbol>()
+                .Any(p => p.SetMethod != null && p.SetMethod.IsInitOnly);
+            
+            return hasClone || hasPrintMembers || hasDeconstruct || hasSpecialToString || 
+                   hasSpecialEquals || hasInitOnlyProperties;
         }
     }
 }

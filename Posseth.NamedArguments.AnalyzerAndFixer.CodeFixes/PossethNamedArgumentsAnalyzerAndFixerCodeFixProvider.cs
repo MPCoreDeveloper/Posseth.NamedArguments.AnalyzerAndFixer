@@ -5,7 +5,6 @@ using System.Composition;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CodeFixes;
@@ -43,32 +42,28 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
         {
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-            
-            // First, process any nested invocations within this argument
-            var processedRoot = ProcessNestedInvocations(root, argument, semanticModel);
-            
-            // Then process the current argument
+
             var argumentList = argument.Parent as ArgumentListSyntax;
             if (argumentList == null)
-                return document.WithSyntaxRoot(processedRoot);
-                
+                return document.WithSyntaxRoot(root);
+
             var invocation = argumentList.Parent;
-            
+
             // Handle both direct invocations and object creation expressions
-            if (invocation == null || 
-                !(invocation is InvocationExpressionSyntax || 
+            if (invocation == null ||
+                !(invocation is InvocationExpressionSyntax ||
                  invocation is ObjectCreationExpressionSyntax))
             {
-                return document.WithSyntaxRoot(processedRoot);
+                return document.WithSyntaxRoot(root);
             }
 
-            // Find the corresponding argument in the processed root
-            var currentArgument = FindCorrespondingNode(processedRoot, argument);
+            // Find the corresponding argument in the current root
+            var currentArgument = FindCorrespondingNode(root, argument);
             if (currentArgument == null)
-                return document.WithSyntaxRoot(processedRoot);
+                return document.WithSyntaxRoot(root);
 
             IMethodSymbol methodSymbol = null;
-            
+
             if (invocation is InvocationExpressionSyntax invocationExpr)
             {
                 methodSymbol = semanticModel.GetSymbolInfo(invocationExpr).Symbol as IMethodSymbol;
@@ -80,29 +75,38 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
 
             if (methodSymbol == null)
             {
-                return document.WithSyntaxRoot(processedRoot);
+                return document.WithSyntaxRoot(root);
             }
 
             int parameterIndex = argumentList.Arguments.IndexOf(argument);
             if (parameterIndex >= methodSymbol.Parameters.Length)
             {
-                return document.WithSyntaxRoot(processedRoot);
+                return document.WithSyntaxRoot(root);
             }
 
             var parameter = methodSymbol.Parameters[parameterIndex];
 
             if (parameter == null)
             {
-                return document.WithSyntaxRoot(processedRoot);
+                return document.WithSyntaxRoot(root);
             }
 
-            // Create a new argument node with a NameColon
-            var namedArgument = SyntaxFactory.Argument(
-                SyntaxFactory.NameColon(parameter.Name),
-                currentArgument.RefOrOutKeyword,
-                currentArgument.Expression);
+            // Preserve the original trivia (whitespace, indentation, etc.)
+            SyntaxTriviaList leadingTrivia = currentArgument.GetLeadingTrivia();
+            SyntaxTriviaList trailingTrivia = currentArgument.GetTrailingTrivia();
 
-            var newRoot = processedRoot.ReplaceNode(currentArgument, namedArgument);
+            // Create the name colon with no trivia - trivia will be applied to the entire argument
+            var nameColon = SyntaxFactory.NameColon(parameter.Name);
+
+            // Create a new argument node with a NameColon, preserving original trivia
+            var namedArgument = SyntaxFactory.Argument(
+                nameColon,
+                currentArgument.RefOrOutKeyword,
+                currentArgument.Expression)
+                .WithLeadingTrivia(leadingTrivia)
+                .WithTrailingTrivia(trailingTrivia);
+
+            var newRoot = root.ReplaceNode(currentArgument, namedArgument);
 
             return document.WithSyntaxRoot(newRoot);
         }
@@ -114,7 +118,7 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             var nodeAtSamePosition = root.FindNode(originalNode.Span);
             if (nodeAtSamePosition is ArgumentSyntax arg)
                 return arg;
-                
+
             // If location-based search failed, try finding by structure
             var parentList = originalNode.Parent as ArgumentListSyntax;
             if (parentList != null)
@@ -123,67 +127,15 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
                 var newParentList = root.DescendantNodes()
                     .OfType<ArgumentListSyntax>()
                     .FirstOrDefault(a => a.Span.Contains(parentList.Span));
-                
+
                 if (newParentList != null && index >= 0 && index < newParentList.Arguments.Count)
                     return newParentList.Arguments[index];
             }
-            
+
             return null;
         }
 
-        // New method to process nested invocations
-        private SyntaxNode ProcessNestedInvocations(SyntaxNode root, ArgumentSyntax argument, SemanticModel semanticModel)
-        {
-            // Find all nested invocations within this argument
-            var nestedInvocations = argument.DescendantNodes()
-                .OfType<InvocationExpressionSyntax>()
-                .ToList();
-                
-            if (nestedInvocations.Count == 0)
-                return root;
-                
-            // Process each nested invocation
-            return root.ReplaceNodes(
-                nestedInvocations,
-                (original, _) => ProcessNestedInvocation(original, original, semanticModel));
-        }
-
-        private SyntaxNode ProcessNestedInvocation(SyntaxNode original, SyntaxNode rewritten, SemanticModel semanticModel)
-        {
-            var invocation = rewritten as InvocationExpressionSyntax;
-            if (invocation == null)
-                return rewritten;
-                
-            var methodSymbol = semanticModel.GetSymbolInfo(invocation).Symbol as IMethodSymbol;
-            if (methodSymbol == null)
-                return rewritten;
-                
-            var argList = invocation.ArgumentList;
-            var newArgs = new List<ArgumentSyntax>();
-            bool changed = false;
-            
-            for (int i = 0; i < argList.Arguments.Count; i++)
-            {
-                var arg = argList.Arguments[i];
-                if (arg.NameColon == null && i < methodSymbol.Parameters.Length)
-                {
-                    changed = true;
-                    newArgs.Add(SyntaxFactory.Argument(
-                        SyntaxFactory.NameColon(methodSymbol.Parameters[i].Name),
-                        arg.RefOrOutKeyword,
-                        arg.Expression));
-                }
-                else
-                {
-                    newArgs.Add(arg);
-                }
-            }
-            
-            if (!changed)
-                return rewritten;
-                
-            return invocation.WithArgumentList(
-                SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(newArgs)));
-        }
     }
+       
+      
 }

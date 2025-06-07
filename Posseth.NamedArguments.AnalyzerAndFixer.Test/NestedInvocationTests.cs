@@ -99,21 +99,20 @@ class Program
         var timeProvider = new TimeProvider();
         
         return new Uri(
-            s3Provider.GetGetPresignedUrl(
-bucketName: appConfiguration.Amazon.S3.BucketName,
-objectKey: objectKey,
-expires: timeProvider.GetLocalNow().AddHours(value: 24))
+            uriString: s3Provider.GetGetPresignedUrl(
+                bucketName: appConfiguration.Amazon.S3.BucketName,
+                objectKey: objectKey,
+                expires: timeProvider.GetLocalNow().AddHours(value: 24)
+            )
         );
     }
 }",
                 ExpectedDiagnostics = {
-                    // Arguments in the GetGetPresignedUrl method
                     VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(39, 17).WithArguments("bucketName"),
                     VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(40, 17).WithArguments("objectKey"),
                     VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(41, 17).WithArguments("expires"),
-                    
-                    // Arguments in the AddHours method
                     VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(41, 53).WithArguments("value"),
+                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(38, 13).WithArguments("uriString"),
                 },
             };
             

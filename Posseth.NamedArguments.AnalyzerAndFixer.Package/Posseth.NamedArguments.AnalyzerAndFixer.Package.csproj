@@ -17,7 +17,7 @@
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Description>This tool analyzes method calls to ensure they use named arguments and provides an option to automatically convert positional arguments to named arguments. For example, it can transform `TestMethod(1, 2)` into `TestMethod(x: 1, y: 2)`.
  </Description>
-    <PackageReleaseNotes>release with new settings and customizations</PackageReleaseNotes>
+    <PackageReleaseNotes>Now the full path is shown of the analyzed argument</PackageReleaseNotes>
     <Copyright>Free to use , distribute and modify </Copyright>
     <PackageTags>NamedArguments;AnalyzerAndFixer;analyzers;</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>

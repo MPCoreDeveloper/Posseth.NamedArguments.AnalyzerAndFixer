@@ -29,10 +29,10 @@ class Program
             {
                 VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 20, 8, 21)
-                    .WithArguments("x"),
+                    .WithArguments("x", "Program.TestMethod"),
                 VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 23, 8, 24)
-                    .WithArguments("y"),
+                    .WithArguments("y", "Program.TestMethod"),
             };
 
             await VerifyCS.VerifyAnalyzerAsync(testCode, expectedDiagnostics);
@@ -56,10 +56,10 @@ class Program
             {
                 VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 20, 8, 21)
-                    .WithArguments("x"),
+                    .WithArguments("x", "Program.TestMethod"),
                 VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 23, 8, 24)
-                    .WithArguments("y"),
+                    .WithArguments("y", "Program.TestMethod"),
             };
 
             var fixedCode = @"
@@ -94,7 +94,7 @@ class Program
             {
                 VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 26, 8, 27)
-                    .WithArguments("x"),
+                    .WithArguments("x", "Program.TestMethodSingle"),
             };
 
             await VerifyCS.VerifyAnalyzerAsync(testCode, expectedDiagnostics);
@@ -118,13 +118,13 @@ class Program
             {
                 VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 20, 8, 21)
-                    .WithArguments("x"),
+                    .WithArguments("x", "Program.TestMethod"),
                 VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 23, 8, 24)
-                    .WithArguments("y"),
+                    .WithArguments("y", "Program.TestMethod"),
                 VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 26, 8, 27)
-                    .WithArguments("z"),
+                    .WithArguments("z", "Program.TestMethod"),
             };
 
             await VerifyCS.VerifyAnalyzerAsync(testCode, expectedDiagnostics);
@@ -148,13 +148,13 @@ class Program
             {
                 VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 20, 8, 21)
-                    .WithArguments("x"),
+                    .WithArguments("x", "Program.TestMethod"),
                 VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 23, 8, 24)
-                    .WithArguments("y"),
+                    .WithArguments("y", "Program.TestMethod"),
                 VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 26, 8, 27)
-                    .WithArguments("z"),
+                    .WithArguments("z", "Program.TestMethod"),
             };
 
             var fixedCode = @"
@@ -189,10 +189,10 @@ class Program
             {
                 VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 26, 8, 27)
-                    .WithArguments("y"),
+                    .WithArguments("y", "Program.TestMethod"),
                 VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 29, 8, 30)
-                    .WithArguments("z"),
+                    .WithArguments("z", "Program.TestMethod"),
             };
 
             var fixedCode = @"
@@ -251,13 +251,13 @@ class Program
             {
                 VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(9, 20, 9, 21)
-                    .WithArguments("a"),
+                    .WithArguments("a", "Program.TestMethod"),
                 VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(9, 23, 9, 24)
-                    .WithArguments("b"),
+                    .WithArguments("b", "Program.TestMethod"),
                 VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(15, 26, 15, 27)
-                    .WithArguments("x"),
+                    .WithArguments("x", "Program.TestMethodSingle"),
             };
 
             await VerifyCS.VerifyAnalyzerAsync(testCode, expectedDiagnostics);
@@ -281,10 +281,10 @@ class Program
             {
                 VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 20, 8, 21)
-                    .WithArguments("a"),
+                    .WithArguments("a", "Program.TestMethod"),
                 VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 23, 8, 24)
-                    .WithArguments("b"),
+                    .WithArguments("b", "Program.TestMethod"),
             };
 
             var fixedCode = @"
@@ -324,7 +324,7 @@ class Program
             // Use the exact location reported in the error message
             var expected = VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
                 .WithSpan(11, 23, 11, 24) // This is the exact position of "1" in Where(1)
-                .WithArguments("x");
+                .WithArguments("x", "MyNamespace.MyClass.Where");
             
             await VerifyCS.VerifyAnalyzerAsync(test, expected);
         }

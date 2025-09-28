@@ -17,7 +17,7 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
     {
         public const string DiagnosticId = "PNA1000"; // Posseth NamedArguments analyzer
         private static readonly LocalizableString Title = "Use named arguments";
-        private static readonly LocalizableString MessageFormat = "Argument '{0}' should be named";
+        private static readonly LocalizableString MessageFormat = "Argument '{0}' in '{1}' should be named";
         private static readonly LocalizableString Description = "All arguments should be named.";
         private const string Category = "Naming";
 
@@ -178,6 +178,8 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
                     return;
             }
 
+            var methodFullName = (methodSymbol.ContainingType?.ToDisplayString() ?? "") + "." + methodSymbol.Name;
+
             // Analyze the arguments
             foreach (var arg in invocation.ArgumentList.Arguments)
             {
@@ -187,7 +189,7 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
                     string paramName = GetParameterName(arg, invocation, methodSymbol, context.SemanticModel);
                     if (!string.IsNullOrEmpty(paramName))
                     {
-                        var diagnostic = Diagnostic.Create(Rule, arg.GetLocation(), paramName);
+                        var diagnostic = Diagnostic.Create(Rule, arg.GetLocation(), paramName, methodFullName);
                         context.ReportDiagnostic(diagnostic);
                     }
                 }
@@ -223,6 +225,8 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
                     return;
             }
             
+            var ctorFullName = (constructorSymbol.ContainingType?.ToDisplayString() ?? "") + "." + constructorSymbol.Name;
+
             // Analyze the arguments
             if (objectCreation.ArgumentList != null)
             {
@@ -234,7 +238,7 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
                         string paramName = GetParameterNameForConstructor(arg, objectCreation, constructorSymbol, context.SemanticModel);
                         if (!string.IsNullOrEmpty(paramName))
                         {
-                            var diagnostic = Diagnostic.Create(Rule, arg.GetLocation(), paramName);
+                            var diagnostic = Diagnostic.Create(Rule, arg.GetLocation(), paramName, ctorFullName);
                             context.ReportDiagnostic(diagnostic);
                         }
                     }

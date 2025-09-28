@@ -82,6 +82,8 @@ if UseDefaultExcludedMethods is true, the following methods will be excluded by 
 ExcludedMethodNames is a comma-separated list of method names you want to exclude from the analyzer.
 default value is "" thus empty.
 
+the two are NOT mutually exclusive so if you set UseDefaultExcludedMethods to true and also provide a list of method names in ExcludedMethodNames,
+both sets of exclusions will be applied.
 
 You can configure the OnlyForRecords and ExcludedMethodNames settings using an .editorconfig file. Here's how to do it:
 

@@ -108,11 +108,11 @@ class Program
     }
 }",
                 ExpectedDiagnostics = {
-                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(39, 17).WithArguments("bucketName"),
-                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(40, 17).WithArguments("objectKey"),
-                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(41, 17).WithArguments("expires"),
-                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(41, 53).WithArguments("value"),
-                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(38, 13).WithArguments("uriString"),
+                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(39, 17).WithArguments("bucketName", "S3Provider.GetGetPresignedUrl"),
+                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(40, 17).WithArguments("objectKey", "S3Provider.GetGetPresignedUrl"),
+                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(41, 17).WithArguments("expires", "S3Provider.GetGetPresignedUrl"),
+                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(41, 53).WithArguments("value", "System.DateTime.AddHours"),
+                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(38, 13).WithArguments("uriString", "System.Uri..ctor"),
                 },
             };
             

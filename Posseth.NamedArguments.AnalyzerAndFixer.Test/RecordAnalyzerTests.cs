@@ -44,9 +44,9 @@ namespace System.Runtime.CompilerServices
 
             // Verwacht diagnostics
             test.ExpectedDiagnostics.Add(
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithSpan(10, 33, 10, 39).WithArguments("Name"));
+                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithSpan(10, 33, 10, 39).WithArguments("Name", "Program.Person..ctor"));
             test.ExpectedDiagnostics.Add(
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithSpan(10, 41, 10, 43).WithArguments("Age"));
+                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithSpan(10, 41, 10, 43).WithArguments("Age", "Program.Person..ctor"));
 
             await test.RunAsync();
         }

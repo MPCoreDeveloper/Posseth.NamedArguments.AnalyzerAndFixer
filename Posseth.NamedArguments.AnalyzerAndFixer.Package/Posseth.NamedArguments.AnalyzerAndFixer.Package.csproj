@@ -33,8 +33,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\Assets\logo.jpeg" />
-    <None Include="..\README.md" />
+    <None Include="..\Assets\logo.jpeg">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,5 @@
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using VerifyCS = Posseth.NamedArguments.AnalyzerAndFixer.Test.CSharpCodeFixVerifier<
@@ -7,12 +7,11 @@ using VerifyCS = Posseth.NamedArguments.AnalyzerAndFixer.Test.CSharpCodeFixVerif
     Posseth.NamedArguments.AnalyzerAndFixer.NamedArgumentsCodeFixProvider>;
 namespace Posseth.NamedArguments.AnalyzerAndFixer.Test
 {
-    [TestClass]
     public class RecordAnalyzerTests
     {
        
 
-        [TestMethod]
+        [Fact]
         public async Task Test_RecordUsage_ShouldRequireNamedArguments()
         {
             var testCode = @"

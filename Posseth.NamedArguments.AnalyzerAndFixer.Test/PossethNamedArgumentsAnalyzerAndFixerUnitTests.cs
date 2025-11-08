@@ -1,5 +1,5 @@
 ﻿using Microsoft.CodeAnalysis.Testing;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using VerifyCS = Posseth.NamedArguments.AnalyzerAndFixer.Test.CSharpCodeFixVerifier<
@@ -8,10 +8,9 @@ using VerifyCS = Posseth.NamedArguments.AnalyzerAndFixer.Test.CSharpCodeFixVerif
 
 namespace Posseth.NamedArguments.AnalyzerAndFixer.Test
 {
-    [TestClass]
     public class PossethNamedArgumentsAnalyzeAndFixUnitTest
     {
-        [TestMethod]
+        [Fact]
         public async Task Test_MethodWithoutNamedArguments_ShouldTriggerDiagnostic()
         {
             var testCode = @"
@@ -38,7 +37,7 @@ class Program
             await VerifyCS.VerifyAnalyzerAsync(testCode, expectedDiagnostics);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task Test_MethodWithoutNamedArguments_ShouldFixToUseNamedArguments()
         {
             var testCode = @"
@@ -76,7 +75,7 @@ class Program
             await VerifyCS.VerifyCodeFixAsync(testCode, expectedDiagnostics, fixedCode);
         }
         
-        [TestMethod]
+        [Fact]
         public async Task Test_MethodWithSingleParameter_ShouldNotTriggerDiagnostic()
         {
             var testCode = @"
@@ -100,7 +99,7 @@ class Program
             await VerifyCS.VerifyAnalyzerAsync(testCode, expectedDiagnostics);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task Test_MethodWithThreeParameters_ShouldTriggerDiagnostic()
         {
             var testCode = @"
@@ -130,7 +129,7 @@ class Program
             await VerifyCS.VerifyAnalyzerAsync(testCode, expectedDiagnostics);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task Test_MethodWithThreeParameters_ShouldFixToUseNamedArguments()
         {
             var testCode = @"
@@ -171,7 +170,7 @@ class Program
             await VerifyCS.VerifyCodeFixAsync(testCode, expectedDiagnostics, fixedCode);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task Test_MethodWithMixedNamedArguments_ShouldOnlyFixUnnamed()
         {
             var testCode = @"
@@ -209,7 +208,7 @@ class Program
             await VerifyCS.VerifyCodeFixAsync(testCode, expectedDiagnostics, fixedCode);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task Test_MethodWithAllNamedArguments_ShouldNotTriggerDiagnostic()
         {
             var testCode = @"
@@ -226,7 +225,7 @@ class Program
             await VerifyCS.VerifyAnalyzerAsync(testCode);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task Test_MethodWithConfiguredMinimumParameters_ShouldRespectThreshold()
         {
             var testCode = @"
@@ -263,7 +262,7 @@ class Program
             await VerifyCS.VerifyAnalyzerAsync(testCode, expectedDiagnostics);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task Test_MethodWithConfiguredMinimumParameters_ShouldFixBorderlineCases()
         {
             var testCode = @"
@@ -301,7 +300,7 @@ class Program
             await VerifyCS.VerifyCodeFixAsync(testCode, expectedDiagnostics, fixedCode);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task Analyzer_Excludes_FullyQualifiedMethodName_ButNotCustom()
         {
             var test = @"

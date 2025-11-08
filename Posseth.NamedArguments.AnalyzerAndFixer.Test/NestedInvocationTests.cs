@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Threading.Tasks;
 using VerifyCS = Posseth.NamedArguments.AnalyzerAndFixer.Test.CSharpCodeFixVerifier<
     Posseth.NamedArguments.AnalyzerAndFixer.NamedArgumentsAnalyzer,
@@ -8,10 +8,9 @@ using VerifyCS = Posseth.NamedArguments.AnalyzerAndFixer.Test.CSharpCodeFixVerif
 
 namespace Posseth.NamedArguments.AnalyzerAndFixer.Test
 {
-    [TestClass]
     public class NestedInvocationTests
     {
-        [TestMethod]
+        [Fact]
         public async Task NestedInvocations_AreFixed()
         {
             // Configuratie om Info-diagnostieken te negeren

@@ -178,7 +178,7 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
                     return;
             }
 
-            var methodFullName = (methodSymbol.ContainingType?.ToDisplayString() ?? "") + "." + methodSymbol.Name;
+            var methodFullName = GetFullMethodName(methodSymbol);
 
             // Analyze the arguments
             foreach (var arg in invocation.ArgumentList.Arguments)
@@ -225,7 +225,7 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
                     return;
             }
             
-            var ctorFullName = (constructorSymbol.ContainingType?.ToDisplayString() ?? "") + "." + constructorSymbol.Name;
+            var ctorFullName = GetFullMethodName(constructorSymbol);
 
             // Analyze the arguments
             if (objectCreation.ArgumentList != null)
@@ -277,7 +277,7 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             context.ReportDiagnostic(diagnostic);
             
             // If default excluded methods are enabled, report them in a separate diagnostic
-            if (UseDefaultExcludedMethods && DefaultExcludedMethods.Count > 0)
+            if (UseDefaultExcludedMethods && DefaultExcludedMethods.Count >0)
             {
                 var defaultMethodsStr = string.Join(", ", DefaultExcludedMethods);
                 var defaultMethodsInfo = Diagnostic.Create(
@@ -308,7 +308,7 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
                 return null;
                 
             // For extension methods, the real containing type is the first parameter type
-            if (methodSymbol.IsExtensionMethod && methodSymbol.Parameters.Length > 0)
+            if (methodSymbol.IsExtensionMethod && methodSymbol.Parameters.Length >0)
             {
                 return methodSymbol.Parameters[0].Type as INamedTypeSymbol;
             }
@@ -325,7 +325,7 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             // Check default excluded methods (by fully qualified name) if enabled
             if (UseDefaultExcludedMethods && methodSymbol != null)
             {
-                var fullName = methodSymbol.ContainingType?.ToDisplayString() + "." + methodSymbol.Name;
+                var fullName = GetFullMethodName(methodSymbol);
                 if (DefaultExcludedMethods.Contains(fullName))
                     return true;
             }
@@ -336,7 +336,7 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             // Parse exclusion list: allow both simple and fully qualified names
             var excludedMethods = ExcludedMethodNames
                 .Split(separator, StringSplitOptions.RemoveEmptyEntries)
-                .Select(m => m.Trim())
+                .Select(m => m.Trim().TrimStart('g','l','o','b','a','l',':',':')) // remove optional global:: prefix if given
                 .Where(m => !string.IsNullOrEmpty(m))
                 .ToImmutableHashSet();
 
@@ -347,7 +347,7 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             // Check for fully qualified name (Namespace.Type.Method)
             if (methodSymbol != null)
             {
-                var fullName = methodSymbol.ContainingType?.ToDisplayString() + "." + methodSymbol.Name;
+                var fullName = GetFullMethodName(methodSymbol);
                 if (excludedMethods.Contains(fullName))
                     return true;
             }
@@ -360,8 +360,8 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             if (type == null)
                 return false;
                 
-            // Method 1: Check IsRecord property directly through reflection
-            // This works for C# 9+ record declarations in newer Roslyn versions
+            // Method1: Check IsRecord property directly through reflection
+            // This works for C#9+ record declarations in newer Roslyn versions
             try
             {
                 var propertyInfo = type.GetType().GetProperty("IsRecord");
@@ -377,8 +377,8 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
                 // Reflection failed, continue with other detection methods
             }
             
-            // Method 2: Check for record keyword in declaration syntax (for C# 9+)
-            if (type.DeclaringSyntaxReferences.Length > 0)
+            // Method2: Check for record keyword in declaration syntax (for C#9+)
+            if (type.DeclaringSyntaxReferences.Length >0)
             {
                 try
                 {
@@ -398,16 +398,16 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
                 }
             }
             
-            // Method 3: Check for record runtime characteristics
+            // Method3: Check for record runtime characteristics
             
             // Check for record's generated Equals/GetHashCode overrides
             bool hasSpecialEquals = type.GetMembers()
                 .Where(m => m.Name == "Equals" && m is IMethodSymbol)
-                .Any(m => ((IMethodSymbol)m).Parameters.Length == 1 && 
+                .Any(m => ((IMethodSymbol)m).Parameters.Length ==1 && 
                           ((IMethodSymbol)m).GetAttributes().Any(attr => 
                               attr.AttributeClass?.Name == "CompilerGeneratedAttribute"));
                               
-            // Check for EqualityContract property (most reliable for .NET Standard 2.0)
+            // Check for EqualityContract property (most reliable for .NET Standard2.0)
             bool hasEqualityContract = false;
             foreach (var member in type.GetMembers())
             {
@@ -423,19 +423,19 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
                 }
             }
             
-            // Method 4: Check for other record characteristics
+            // Method4: Check for other record characteristics
             bool hasClone = type.GetMembers().Any(m => m.Name == "<Clone>$" && m is IMethodSymbol);
             bool hasPrintMembers = type.GetMembers().Any(m => m.Name == "PrintMembers" && m is IMethodSymbol);
             bool hasDeconstruct = type.GetMembers().Any(m => m.Name == "Deconstruct" && m is IMethodSymbol);
             
-            // Method 5: Check for record-specific ToString override pattern
+            // Method5: Check for record-specific ToString override pattern
             bool hasSpecialToString = type.GetMembers()
                 .Where(m => m.Name == "ToString" && m is IMethodSymbol)
-                .Any(m => ((IMethodSymbol)m).Parameters.Length == 0 && 
+                .Any(m => ((IMethodSymbol)m).Parameters.Length ==0 && 
                           ((IMethodSymbol)m).GetAttributes().Any(attr => 
                               attr.AttributeClass?.Name == "CompilerGeneratedAttribute"));
             
-            // Method 6: Check for property pattern with init-only setters (common in records)
+            // Method6: Check for property pattern with init-only setters (common in records)
             bool hasInitOnlyProperties = type.GetMembers()
                 .Where(m => m is IPropertySymbol)
                 .Cast<IPropertySymbol>()
@@ -443,6 +443,26 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             
             return hasClone || hasPrintMembers || hasDeconstruct || hasSpecialToString || 
                    hasSpecialEquals || hasInitOnlyProperties;
+        }
+
+        private static string GetFullMethodName(IMethodSymbol methodSymbol)
+        {
+            if (methodSymbol == null) return string.Empty;
+            var typeName = GetFullTypeName(methodSymbol.ContainingType);
+            return string.IsNullOrEmpty(typeName) ? methodSymbol.Name : typeName + "." + methodSymbol.Name;
+        }
+
+        private static string GetFullTypeName(INamedTypeSymbol typeSymbol)
+        {
+            if (typeSymbol == null) return string.Empty;
+            var full = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            // strip global:: prefix if present
+            const string GlobalPrefix = "global::";
+            if (full.StartsWith(GlobalPrefix, StringComparison.Ordinal))
+            {
+                full = full.Substring(GlobalPrefix.Length);
+            }
+            return full;
         }
     }
 }

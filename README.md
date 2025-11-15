@@ -10,6 +10,12 @@ This is a Roslyn analyzer and code fix provider that enforces the use of named a
 - **Exclusions**: Built-in list of excluded methods where positional arguments are acceptable, with options to add custom exclusions.
 - **Record Support**: Optional mode to only analyze record types.
 
+
+
+## Update notes
+ - **v1.1.8** - 2025-06-15
+ -Analyzer & code-fix test suite fully modernized to .NET 10, xUnit v3, Microsoft Testing Platform and the latest Roslyn testing
+ -framework (1.1.2) using the current DefaultVerifier/TestState pattern — zero warnings, fully compatible with Visual Studio 2026
 ## Installation
 
 ### NuGet Package

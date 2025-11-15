@@ -336,8 +336,15 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             // Check default excluded methods (by fully qualified name) if enabled
             if (UseDefaultExcludedMethods && methodSymbol != null)
             {
-                var fullName = GetFullMethodName(methodSymbol);
-                if (DefaultExcludedMethods.Contains(fullName))
+                var fullName = GetFullMethodName(methodSymbol); // e.g., System.Linq.Enumerable.Where
+
+                // also build minimally qualified and simple variants to match list entries
+                var minimalType = methodSymbol.ContainingType?.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat) ?? string.Empty; // e.g., Enumerable
+                var minimalFull = string.IsNullOrEmpty(minimalType) ? methodSymbol.Name : minimalType + "." + methodSymbol.Name; // e.g., Enumerable.Where
+                var simpleType = methodSymbol.ContainingType?.Name ?? string.Empty; // e.g., Enumerable
+                var simpleFull = string.IsNullOrEmpty(simpleType) ? methodSymbol.Name : simpleType + "." + methodSymbol.Name; // e.g., Enumerable.Where
+
+                if (DefaultExcludedMethods.Contains(fullName) || DefaultExcludedMethods.Contains(minimalFull) || DefaultExcludedMethods.Contains(simpleFull))
                     return true;
             }
 
@@ -360,6 +367,12 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             {
                 var fullName = GetFullMethodName(methodSymbol);
                 if (excludedMethods.Contains(fullName))
+                    return true;
+
+                // also check minimally qualified
+                var minimalType = methodSymbol.ContainingType?.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat) ?? string.Empty;
+                var minimalFull = string.IsNullOrEmpty(minimalType) ? methodSymbol.Name : minimalType + "." + methodSymbol.Name;
+                if (excludedMethods.Contains(minimalFull))
                     return true;
             }
 
@@ -466,7 +479,13 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
         private static string GetFullTypeName(INamedTypeSymbol typeSymbol)
         {
             if (typeSymbol == null) return string.Empty;
-            var full = typeSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+            var full = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            // strip global:: prefix if present
+            const string GlobalPrefix = "global::";
+            if (full.StartsWith(GlobalPrefix, StringComparison.Ordinal))
+            {
+                full = full.Substring(GlobalPrefix.Length);
+            }
             return full;
         }
     }

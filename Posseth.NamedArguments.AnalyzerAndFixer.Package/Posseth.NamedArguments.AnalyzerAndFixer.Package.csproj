@@ -9,7 +9,7 @@
 
   <PropertyGroup>
     <PackageId>Posseth.NamedArguments.AnalyzerAndFixer</PackageId>
-    <PackageVersion>1.0.1.7</PackageVersion>
+    <PackageVersion>1.0.1.8</PackageVersion>
     <Authors>MPCoreDeveloper</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/MPCoreDeveloper/Posseth.NamedArguments.AnalyzerAndFixer</PackageProjectUrl>
@@ -17,14 +17,14 @@
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Description>This tool analyzes method calls to ensure they use named arguments and provides an option to automatically convert positional arguments to named arguments. For example, it can transform `TestMethod(1, 2)` into `TestMethod(x: 1, y: 2)`.
  </Description>
-    <PackageReleaseNotes>Updated default list, discovered namespace path is shown</PackageReleaseNotes>
+    <PackageReleaseNotes>This version has been upgraded and tested against VS 2026 and net 10</PackageReleaseNotes>
     <Copyright>Free to use , distribute and modify </Copyright>
     <PackageTags>NamedArguments;AnalyzerAndFixer;analyzers;</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzersToOutput</TargetsForTfmSpecificContentInPackage>
     <Title>Named Arguments Analyzer and Fixer</Title>
-    <Version>1.1.7</Version>
+    <Version>1.1.8</Version>
     <Company>Posseth Software</Company>
     <Product>Posseth.NamedArguments.AnalyzerAndFixer</Product>
     <PackageIcon>logo.jpeg</PackageIcon>

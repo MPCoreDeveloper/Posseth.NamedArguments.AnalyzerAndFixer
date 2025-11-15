@@ -1,10 +1,9 @@
-﻿using Microsoft.CodeAnalysis.Testing;
+﻿using Microsoft.CodeAnalysis.CSharp.Testing;
+using Microsoft.CodeAnalysis.Testing;
+using Microsoft.CodeAnalysis.Testing.Verifiers;
 using Xunit;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using VerifyCS = Posseth.NamedArguments.AnalyzerAndFixer.Test.CSharpCodeFixVerifier<
-    Posseth.NamedArguments.AnalyzerAndFixer.NamedArgumentsAnalyzer,
-    Posseth.NamedArguments.AnalyzerAndFixer.NamedArgumentsCodeFixProvider>;
 
 namespace Posseth.NamedArguments.AnalyzerAndFixer.Test
 {
@@ -24,17 +23,18 @@ class Program
     }
 }";
 
-            var expectedDiagnostics = new[]
-            {
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
+            var test = new CSharpAnalyzerTest<NamedArgumentsAnalyzer, DefaultVerifier>();
+            test.TestState.Sources.Add(testCode);
+            test.TestState.ExpectedDiagnostics.Add(
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 20, 8, 21)
-                    .WithArguments("x", "Program.TestMethod"),
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
+                    .WithArguments("x", "Program.TestMethod"));
+            test.TestState.ExpectedDiagnostics.Add(
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 23, 8, 24)
-                    .WithArguments("y", "Program.TestMethod"),
-            };
+                    .WithArguments("y", "Program.TestMethod"));
 
-            await VerifyCS.VerifyAnalyzerAsync(testCode, expectedDiagnostics);
+            await test.RunAsync();
         }
 
         [Fact]
@@ -51,16 +51,6 @@ class Program
     }
 }";
 
-            var expectedDiagnostics = new[]
-            {
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
-                    .WithSpan(8, 20, 8, 21)
-                    .WithArguments("x", "Program.TestMethod"),
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
-                    .WithSpan(8, 23, 8, 24)
-                    .WithArguments("y", "Program.TestMethod"),
-            };
-
             var fixedCode = @"
 using System;
 
@@ -72,7 +62,19 @@ class Program
     }
 }";
 
-            await VerifyCS.VerifyCodeFixAsync(testCode, expectedDiagnostics, fixedCode);
+            var test = new CSharpCodeFixTest<NamedArgumentsAnalyzer, NamedArgumentsCodeFixProvider, DefaultVerifier>();
+            test.TestState.Sources.Add(testCode);
+            test.FixedState.Sources.Add(fixedCode);
+            test.TestState.ExpectedDiagnostics.Add(
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
+                    .WithSpan(8, 20, 8, 21)
+                    .WithArguments("x", "Program.TestMethod"));
+            test.TestState.ExpectedDiagnostics.Add(
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
+                    .WithSpan(8, 23, 8, 24)
+                    .WithArguments("y", "Program.TestMethod"));
+
+            await test.RunAsync();
         }
         
         [Fact]
@@ -91,12 +93,16 @@ class Program
 
             var expectedDiagnostics = new[]
             {
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 26, 8, 27)
                     .WithArguments("x", "Program.TestMethodSingle"),
             };
 
-            await VerifyCS.VerifyAnalyzerAsync(testCode, expectedDiagnostics);
+            var test = new CSharpAnalyzerTest<NamedArgumentsAnalyzer, DefaultVerifier>();
+            test.TestState.Sources.Add(testCode);
+            test.TestState.ExpectedDiagnostics.AddRange(expectedDiagnostics);
+
+            await test.RunAsync();
         }
 
         [Fact]
@@ -115,18 +121,22 @@ class Program
 
             var expectedDiagnostics = new[]
             {
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 20, 8, 21)
                     .WithArguments("x", "Program.TestMethod"),
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 23, 8, 24)
                     .WithArguments("y", "Program.TestMethod"),
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 26, 8, 27)
                     .WithArguments("z", "Program.TestMethod"),
             };
 
-            await VerifyCS.VerifyAnalyzerAsync(testCode, expectedDiagnostics);
+            var test = new CSharpAnalyzerTest<NamedArgumentsAnalyzer, DefaultVerifier>();
+            test.TestState.Sources.Add(testCode);
+            test.TestState.ExpectedDiagnostics.AddRange(expectedDiagnostics);
+
+            await test.RunAsync();
         }
 
         [Fact]
@@ -143,19 +153,6 @@ class Program
     }
 }";
 
-            var expectedDiagnostics = new[]
-            {
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
-                    .WithSpan(8, 20, 8, 21)
-                    .WithArguments("x", "Program.TestMethod"),
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
-                    .WithSpan(8, 23, 8, 24)
-                    .WithArguments("y", "Program.TestMethod"),
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
-                    .WithSpan(8, 26, 8, 27)
-                    .WithArguments("z", "Program.TestMethod"),
-            };
-
             var fixedCode = @"
 using System;
 
@@ -167,7 +164,23 @@ class Program
     }
 }";
 
-            await VerifyCS.VerifyCodeFixAsync(testCode, expectedDiagnostics, fixedCode);
+            var test = new CSharpCodeFixTest<NamedArgumentsAnalyzer, NamedArgumentsCodeFixProvider, DefaultVerifier>();
+            test.TestState.Sources.Add(testCode);
+            test.FixedState.Sources.Add(fixedCode);
+            test.TestState.ExpectedDiagnostics.Add(
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
+                    .WithSpan(8, 20, 8, 21)
+                    .WithArguments("x", "Program.TestMethod"));
+            test.TestState.ExpectedDiagnostics.Add(
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
+                    .WithSpan(8, 23, 8, 24)
+                    .WithArguments("y", "Program.TestMethod"));
+            test.TestState.ExpectedDiagnostics.Add(
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
+                    .WithSpan(8, 26, 8, 27)
+                    .WithArguments("z", "Program.TestMethod"));
+
+            await test.RunAsync();
         }
 
         [Fact]
@@ -183,13 +196,12 @@ class Program
         TestMethod(x: 1, 2, 3);
     }
 }";
-
             var expectedDiagnostics = new[]
             {
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 26, 8, 27)
                     .WithArguments("y", "Program.TestMethod"),
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 29, 8, 30)
                     .WithArguments("z", "Program.TestMethod"),
             };
@@ -204,8 +216,12 @@ class Program
         TestMethod(x: 1, y: 2, z: 3);
     }
 }";
+            var test = new CSharpCodeFixTest<NamedArgumentsAnalyzer, NamedArgumentsCodeFixProvider, DefaultVerifier>();
+            test.TestState.Sources.Add(testCode);
+            test.FixedState.Sources.Add(fixedCode);
+            test.TestState.ExpectedDiagnostics.AddRange(expectedDiagnostics);
 
-            await VerifyCS.VerifyCodeFixAsync(testCode, expectedDiagnostics, fixedCode);
+            await test.RunAsync();
         }
 
         [Fact]
@@ -222,7 +238,11 @@ class Program
     }
 }";
 
-            await VerifyCS.VerifyAnalyzerAsync(testCode);
+            var test = new CSharpAnalyzerTest<NamedArgumentsAnalyzer, DefaultVerifier>();
+            test.TestState.Sources.Add(testCode);
+            // No expected diagnostics
+
+            await test.RunAsync();
         }
 
         [Fact]
@@ -248,18 +268,22 @@ class Program
 
             var expectedDiagnostics = new[]
             {
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(9, 20, 9, 21)
                     .WithArguments("a", "Program.TestMethod"),
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(9, 23, 9, 24)
                     .WithArguments("b", "Program.TestMethod"),
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(15, 26, 15, 27)
                     .WithArguments("x", "Program.TestMethodSingle"),
             };
 
-            await VerifyCS.VerifyAnalyzerAsync(testCode, expectedDiagnostics);
+            var test = new CSharpAnalyzerTest<NamedArgumentsAnalyzer, DefaultVerifier>();
+            test.TestState.Sources.Add(testCode);
+            test.TestState.ExpectedDiagnostics.AddRange(expectedDiagnostics);
+
+            await test.RunAsync();
         }
 
         [Fact]
@@ -278,10 +302,10 @@ class Program
 
             var expectedDiagnostics = new[]
             {
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 20, 8, 21)
                     .WithArguments("a", "Program.TestMethod"),
-                VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
                     .WithSpan(8, 23, 8, 24)
                     .WithArguments("b", "Program.TestMethod"),
             };
@@ -297,13 +321,18 @@ class Program
     }
 }";
 
-            await VerifyCS.VerifyCodeFixAsync(testCode, expectedDiagnostics, fixedCode);
+            var test = new CSharpCodeFixTest<NamedArgumentsAnalyzer, NamedArgumentsCodeFixProvider, DefaultVerifier>();
+            test.TestState.Sources.Add(testCode);
+            test.FixedState.Sources.Add(fixedCode);
+            test.TestState.ExpectedDiagnostics.AddRange(expectedDiagnostics);
+
+            await test.RunAsync();
         }
 
         [Fact]
         public async Task Analyzer_Excludes_FullyQualifiedMethodName_ButNotCustom()
         {
-            var test = @"
+            var testCode = @"
     using System.Linq;
     namespace MyNamespace
     {
@@ -321,11 +350,14 @@ class Program
     ";
 
             // Use the exact location reported in the error message
-            var expected = VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId)
+            var expected = DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId)
                 .WithSpan(11, 23, 11, 24) // This is the exact position of "1" in Where(1)
                 .WithArguments("x", "MyNamespace.MyClass.Where");
             
-            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+            var test = new CSharpAnalyzerTest<NamedArgumentsAnalyzer, DefaultVerifier>();
+            test.TestState.Sources.Add(testCode);
+            test.TestState.ExpectedDiagnostics.Add(expected);
+            await test.RunAsync();
         }
     }   
 }

@@ -1,10 +1,8 @@
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
+using Microsoft.CodeAnalysis.Testing.Verifiers;
 using Xunit;
 using System.Threading.Tasks;
-using VerifyCS = Posseth.NamedArguments.AnalyzerAndFixer.Test.CSharpCodeFixVerifier<
-    Posseth.NamedArguments.AnalyzerAndFixer.NamedArgumentsAnalyzer,
-    Posseth.NamedArguments.AnalyzerAndFixer.NamedArgumentsCodeFixProvider>;
 
 namespace Posseth.NamedArguments.AnalyzerAndFixer.Test
 {
@@ -14,9 +12,8 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer.Test
         public async Task NestedInvocations_AreFixed()
         {
             // Configuratie om Info-diagnostieken te negeren
-            var test = new VerifyCS.Test
-            {
-                TestCode = @"
+            var test = new CSharpCodeFixTest<NamedArgumentsAnalyzer, NamedArgumentsCodeFixProvider, DefaultVerifier>();
+            test.TestState.Sources.Add(@"
 using System;
 
 class TimeProvider 
@@ -60,8 +57,8 @@ class Program
             )
         );
     }
-}",
-                FixedCode = @"
+}");
+            test.FixedState.Sources.Add(@"
 using System;
 
 class TimeProvider 
@@ -105,15 +102,17 @@ class Program
             )
         );
     }
-}",
-                ExpectedDiagnostics = {
-                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(39, 17).WithArguments("bucketName", "S3Provider.GetGetPresignedUrl"),
-                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(40, 17).WithArguments("objectKey", "S3Provider.GetGetPresignedUrl"),
-                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(41, 17).WithArguments("expires", "S3Provider.GetGetPresignedUrl"),
-                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(41, 53).WithArguments("value", "System.DateTime.AddHours"),
-                    VerifyCS.Diagnostic(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(38, 13).WithArguments("uriString", "System.Uri..ctor"),
-                },
-            };
+}");
+            test.TestState.ExpectedDiagnostics.Add(
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(39, 17).WithArguments("bucketName", "S3Provider.GetGetPresignedUrl"));
+            test.TestState.ExpectedDiagnostics.Add(
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(40, 17).WithArguments("objectKey", "S3Provider.GetGetPresignedUrl"));
+            test.TestState.ExpectedDiagnostics.Add(
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(41, 17).WithArguments("expires", "S3Provider.GetGetPresignedUrl"));
+            test.TestState.ExpectedDiagnostics.Add(
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(41, 53).WithArguments("value", "System.DateTime.AddHours"));
+            test.TestState.ExpectedDiagnostics.Add(
+                DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId).WithLocation(38, 13).WithArguments("uriString", "System.Uri..ctor"));
             
             // Negeer Info-diagnostieken
             test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", @"

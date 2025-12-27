@@ -1,5 +1,7 @@
 # Posseth NamedArguments AnalyzerAndFixer
 
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/MPCoreDeveloper?style=for-the-badge&logo=github&label=Sponsor)](https://github.com/sponsors/MPCoreDeveloper)
+
 This is a Roslyn analyzer and code fix provider that enforces the use of named arguments in C# method calls and object creations. It helps improve code readability by requiring named arguments for methods with multiple parameters, while allowing exclusions for commonly used methods where positional arguments are preferred.
 
 ## Features

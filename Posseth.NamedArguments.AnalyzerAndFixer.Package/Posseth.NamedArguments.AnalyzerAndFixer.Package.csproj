@@ -9,22 +9,21 @@
 
   <PropertyGroup>
     <PackageId>Posseth.NamedArguments.AnalyzerAndFixer</PackageId>
-    <PackageVersion>1.0.1.8</PackageVersion>
+    <PackageVersion>1.1.9</PackageVersion>
     <Authors>MPCoreDeveloper</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/MPCoreDeveloper/Posseth.NamedArguments.AnalyzerAndFixer</PackageProjectUrl>
     <RepositoryUrl>https://github.com/MPCoreDeveloper/Posseth.NamedArguments.AnalyzerAndFixer</RepositoryUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <Description>This tool analyzes method calls to ensure they use named arguments and provides an option to automatically convert positional arguments to named arguments. For example, it can transform `TestMethod(1, 2)` into `TestMethod(x: 1, y: 2)`.
- </Description>
-    <PackageReleaseNotes>This version has been upgraded and tested against VS 2026 and net 10</PackageReleaseNotes>
-    <Copyright>Free to use , distribute and modify </Copyright>
-    <PackageTags>NamedArguments;AnalyzerAndFixer;analyzers;</PackageTags>
+    <Description>This Roslyn analyzer enforces named arguments in C# method calls and object creation expressions, and includes a code fix that converts positional arguments to named arguments automatically.</Description>
+    <PackageReleaseNotes>Updated for version 1.1.9 with .NET 10 and Visual Studio 2026 validation, refreshed package metadata, and corrected test execution compatibility.</PackageReleaseNotes>
+    <Copyright>Copyright (c) Posseth Software</Copyright>
+    <PackageTags>NamedArguments;AnalyzerAndFixer;Roslyn;Analyzer;CodeFix</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzersToOutput</TargetsForTfmSpecificContentInPackage>
     <Title>Named Arguments Analyzer and Fixer</Title>
-    <Version>1.1.8</Version>
+    <Version>1.1.9</Version>
     <Company>Posseth Software</Company>
     <Product>Posseth.NamedArguments.AnalyzerAndFixer</Product>
     <PackageIcon>logo.jpeg</PackageIcon>
@@ -46,10 +45,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Posseth.NamedArguments.AnalyzerAndFixer.CodeFixes\Posseth.NamedArguments.AnalyzerAndFixer.CodeFixes.csproj" />
     <ProjectReference Include="..\Posseth.NamedArguments.AnalyzerAndFixer\Posseth.NamedArguments.AnalyzerAndFixer.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="tools\*.ps1" CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="" />
   </ItemGroup>
 
   <Target Name="_AddAnalyzersToOutput">

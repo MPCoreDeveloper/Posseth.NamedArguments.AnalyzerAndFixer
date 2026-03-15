@@ -8,16 +8,16 @@ This is a Roslyn analyzer and code fix provider that enforces the use of named a
 
 - **Diagnostic**: Warns when positional arguments are used in method calls or object creations with multiple parameters.
 - **Code Fix**: Automatically adds named arguments to fix the diagnostic.
-- **Configurable**: Supports configuration via .editorconfig files to customize behavior.
+- **Configurable**: Supports configuration via `.editorconfig` files to customize behavior.
 - **Exclusions**: Built-in list of excluded methods where positional arguments are acceptable, with options to add custom exclusions.
 - **Record Support**: Optional mode to only analyze record types.
 
-
-
 ## Update notes
- - **v1.1.8** - 2025-06-15
- -Analyzer & code-fix test suite fully modernized to .NET 10, xUnit v3, Microsoft Testing Platform and the latest Roslyn testing
- -framework (1.1.2) using the current DefaultVerifier/TestState pattern — zero warnings, fully compatible with Visual Studio 2026
+- **v1.1.9** - 2025-06-15
+- Refreshed NuGet package metadata and release assets.
+- Validated the analyzer package for .NET 10 and Visual Studio 2026.
+- Corrected automated test execution compatibility.
+
 ## Installation
 
 ### NuGet Package
@@ -28,7 +28,7 @@ Install the analyzer via NuGet:
 dotnet add package Posseth.NamedArguments.AnalyzerAndFixer
 ```
 
-Or search for "Posseth.NamedArguments.AnalyzerAndFixer" in the NuGet Package Manager.
+Or search for `Posseth.NamedArguments.AnalyzerAndFixer` in the NuGet Package Manager.
 
 ### Manual Installation
 
@@ -62,7 +62,7 @@ Note: `string.Replace` is excluded by default, so this example won't trigger in 
 
 ## Configuration
 
-The analyzer supports several configuration options via .editorconfig files.
+The analyzer supports several configuration options via `.editorconfig` files.
 
 ### Options
 
@@ -148,7 +148,7 @@ If `UseDefaultExcludedMethods` is true, the following methods are excluded by de
 
 #### Option 1: Using .editorconfig File (Recommended)
 
-1. Create or open an .editorconfig file in the root of your solution or project.
+1. Create or open an `.editorconfig` file in the root of your solution or project.
 2. Add the following configuration entries:
 
 ```ini
@@ -167,10 +167,10 @@ dotnet_diagnostic.PNA1000.ExcludedMethodNames = ToString,Equals,GetHashCode
 
 1. Right-click on your solution in Solution Explorer.
 2. Select **Analyze > Configure Code Analysis > For Solution**.
-3. In the dialog that appears, find the analyzer (PNA1000).
+3. In the dialog that appears, find the analyzer (`PNA1000`).
 4. Configure the settings for OnlyForRecords and ExcludedMethodNames.
 
-#### Option 3: Configure in Project File (.csproj)
+#### Option 3: Configure in Project File (`.csproj`)
 
 You can also add these settings to your project file:
 
@@ -186,7 +186,7 @@ You can also add these settings to your project file:
 </PropertyGroup>
 ```
 
-Then create a .analyzer.config file with:
+Then create a `.analyzer.config` file with:
 
 ```ini
 is_global = true
@@ -195,11 +195,11 @@ PNA1000.UseDefaultExcludedMethods = true
 PNA1000.ExcludedMethodNames = ToString,Equals,GetHashCode
 ```
 
-The most common and recommended approach is Option 1 with the .editorconfig file, as it's the standard way to configure analyzer settings in modern .NET projects.
+The most common and recommended approach is Option 1 with the `.editorconfig` file, as it's the standard way to configure analyzer settings in modern .NET projects.
 
 ## Contributing
 
-Contributions are welcome! Please open issues or submit pull requests on GitHub.
+Contributions are welcome. Please open issues or submit pull requests on GitHub.
 
 ## License
 

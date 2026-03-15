@@ -9,7 +9,7 @@
 
   <PropertyGroup>
     <PackageId>Posseth.NamedArguments.AnalyzerAndFixer</PackageId>
-    <PackageVersion>1.1.9</PackageVersion>
+    <PackageVersion>1.0.1.9</PackageVersion>
     <Authors>MPCoreDeveloper</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/MPCoreDeveloper/Posseth.NamedArguments.AnalyzerAndFixer</PackageProjectUrl>
@@ -23,7 +23,7 @@
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzersToOutput</TargetsForTfmSpecificContentInPackage>
     <Title>Named Arguments Analyzer and Fixer</Title>
-    <Version>1.1.9</Version>
+    <Version>1.0.1.9</Version>
     <Company>Posseth Software</Company>
     <Product>Posseth.NamedArguments.AnalyzerAndFixer</Product>
     <PackageIcon>logo.jpeg</PackageIcon>

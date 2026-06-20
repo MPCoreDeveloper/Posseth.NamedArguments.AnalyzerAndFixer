@@ -1,17 +1,17 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35219.272
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Posseth.NamedArguments.AnalyzerAndFixer", "Posseth.NamedArguments.AnalyzerAndFixer\Posseth.NamedArguments.AnalyzerAndFixer.csproj", "{CCEAA914-108C-4F08-B42F-510877ED1223}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Posseth.NamedArguments.AnalyzerAndFixer", "src\\Posseth.NamedArguments.AnalyzerAndFixer\\Posseth.NamedArguments.AnalyzerAndFixer.csproj", "{CCEAA914-108C-4F08-B42F-510877ED1223}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Posseth.NamedArguments.AnalyzerAndFixer.CodeFixes", "Posseth.NamedArguments.AnalyzerAndFixer.CodeFixes\Posseth.NamedArguments.AnalyzerAndFixer.CodeFixes.csproj", "{42C7B52D-05E8-4357-B450-AC9285EBD889}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Posseth.NamedArguments.AnalyzerAndFixer.CodeFixes", "src\\Posseth.NamedArguments.AnalyzerAndFixer.CodeFixes\\Posseth.NamedArguments.AnalyzerAndFixer.CodeFixes.csproj", "{42C7B52D-05E8-4357-B450-AC9285EBD889}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Posseth.NamedArguments.AnalyzerAndFixer.Package", "Posseth.NamedArguments.AnalyzerAndFixer.Package\Posseth.NamedArguments.AnalyzerAndFixer.Package.csproj", "{E04D2391-C29D-4C60-9A9E-8400B437D66A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Posseth.NamedArguments.AnalyzerAndFixer.Package", "src\\Posseth.NamedArguments.AnalyzerAndFixer.Package\\Posseth.NamedArguments.AnalyzerAndFixer.Package.csproj", "{E04D2391-C29D-4C60-9A9E-8400B437D66A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Posseth.NamedArguments.AnalyzerAndFixer.Test", "Posseth.NamedArguments.AnalyzerAndFixer.Test\Posseth.NamedArguments.AnalyzerAndFixer.Test.csproj", "{8B96F85D-AF6D-4B8A-9814-112F09929F73}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Posseth.NamedArguments.AnalyzerAndFixer.Test", "tests\\Posseth.NamedArguments.AnalyzerAndFixer.Test\\Posseth.NamedArguments.AnalyzerAndFixer.Test.csproj", "{8B96F85D-AF6D-4B8A-9814-112F09929F73}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Posseth.NamedArguments.AnalyzerAndFixer.Vsix", "Posseth.NamedArguments.AnalyzerAndFixer.Vsix\Posseth.NamedArguments.AnalyzerAndFixer.Vsix.csproj", "{DF3F84BA-98C9-4FBA-9B42-10C1EBF0C447}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Posseth.NamedArguments.AnalyzerAndFixer.Vsix", "src\\Posseth.NamedArguments.AnalyzerAndFixer.Vsix\\Posseth.NamedArguments.AnalyzerAndFixer.Vsix.csproj", "{DF3F84BA-98C9-4FBA-9B42-10C1EBF0C447}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D511EA3B-C7FB-4AC4-8F64-3B9AA538F2AE}"
 	ProjectSection(SolutionItems) = preProject
@@ -63,3 +63,5 @@ Global
 		SolutionGuid = {BF18F192-ED7A-42AA-B965-EB35F304F75F}
 	EndGlobalSection
 EndGlobal
+
+

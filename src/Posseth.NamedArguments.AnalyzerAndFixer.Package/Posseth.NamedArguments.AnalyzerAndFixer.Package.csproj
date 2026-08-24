@@ -15,7 +15,7 @@
     <PackageProjectUrl>https://github.com/MPCoreDeveloper/Posseth.NamedArguments.AnalyzerAndFixer</PackageProjectUrl>
     <RepositoryUrl>https://github.com/MPCoreDeveloper/Posseth.NamedArguments.AnalyzerAndFixer</RepositoryUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <Description>This Roslyn analyzer enforces named arguments in C# method calls and object creation expressions, and includes a code fix that converts positional arguments to named arguments automatically.</Description>
+    <Description>Roslyn analyzer that enforces named arguments in C# method calls and object creation expressions, and includes a code fix that converts positional arguments to named arguments automatically. Diagnostics include the fully qualified method path so excluded methods can be configured easily through .editorconfig (OnlyForRecords, UseDefaultExcludedMethods, ExcludedMethodNames).</Description>
     <PackageReleaseNotes>Version 1.2.0: the diagnostic message now shows the fully qualified method path (e.g. "Argument 'x' in method 'Namespace.Type.Method' should be named"); the .editorconfig options (OnlyForRecords, ExcludedMethodNames, UseDefaultExcludedMethods) are now correctly applied; fixed global:: prefix parsing for exclusion lists; added fully-qualified extension-method exclusion support and comprehensive analyzer/fixer tests; zero-warning build.</PackageReleaseNotes>
     <Copyright>Copyright (c) Posseth Software</Copyright>
     <PackageTags>NamedArguments;AnalyzerAndFixer;Roslyn;Analyzer;CodeFix</PackageTags>

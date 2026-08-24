@@ -10,6 +10,7 @@ This is a Roslyn analyzer and code fix provider that enforces the use of named a
 - **Code Fix**: Automatically adds named arguments to fix the diagnostic.
 - **Configurable**: Supports configuration via `.editorconfig` files to customize behavior.
 - **Exclusions**: Built-in list of excluded methods where positional arguments are acceptable, with options to add custom exclusions.
+- **Full context in diagnostics**: Each diagnostic includes the fully qualified method path (namespace, type, method), so you can immediately decide whether to add the method to the exclusion list.
 - **Record Support**: Optional mode to only analyze record types.
 
 ## Update notes
@@ -17,6 +18,7 @@ This is a Roslyn analyzer and code fix provider that enforces the use of named a
 - The diagnostic message now shows the fully qualified method path, e.g. `Argument 'navigationPropertyPath' in method 'Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.Include' should be named`.
 - The `.editorconfig` options (`OnlyForRecords`, `ExcludedMethodNames`, `UseDefaultExcludedMethods`) are now correctly applied by the analyzer.
 - Added analyzer/fixer tests for extension-method invocations (EF Core `Include` style) and exclusion by fully qualified extension-method names.
+- Info diagnostics (`PNA1000_Info` / `PNA1000_DefaultMethods`) now surface the effective analyzer options when they have been customized.
 - **v1.1.9** - 2025-06-15
 - Refreshed NuGet package metadata and release assets.
 - Validated the analyzer package for .NET 10 and Visual Studio 2026.
@@ -64,6 +66,16 @@ public void Example()
 
 Note: `string.Replace` is excluded by default, so this example won't trigger in practice. Use custom methods or disable exclusions to see the behavior.
 
+### Diagnostic message
+
+Each diagnostic includes the fully qualified method path so you can immediately identify the method and build your exclusion list:
+
+```text
+Argument 'navigationPropertyPath' in method 'Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.Include' should be named
+```
+
+The message is composed as `Argument '{0}' in method '{1}' should be named`, where `{0}` is the parameter name and `{1}` is the fully qualified method path (namespace, containing type, method name).
+
 ## Configuration
 
 The analyzer supports several configuration options via `.editorconfig` files.
@@ -77,6 +89,20 @@ The analyzer reads the following options from the `dotnet_diagnostic.PNA1000.*` 
 - **ExcludedMethodNames** (string, default: ""): Comma-separated list of additional method names to exclude.
 
 > **Note:** `UseDefaultExcludedMethods` and `ExcludedMethodNames` are **not mutually exclusive** — they are combined. When `UseDefaultExcludedMethods` is `true`, the built-in list is merged with your custom `ExcludedMethodNames` entries to form the complete set of exclusions.
+
+### Info diagnostics
+
+When you customize the analyzer options above, the analyzer also reports two *info*-level diagnostics once per file so you can verify the effective configuration:
+
+- **PNA1000_Info** – shows the resolved options: `NamedArgumentsAnalyzer options: OnlyForRecords={0}, ExcludedMethodNames={1}, UseDefaultExcludedMethods={2}`.
+- **PNA1000_DefaultMethods** – shows the built-in default excluded-method list that is applied while `UseDefaultExcludedMethods` is enabled.
+
+These are informational only. To suppress them, add:
+
+```ini
+dotnet_diagnostic.PNA1000_Info.severity = none
+dotnet_diagnostic.PNA1000_DefaultMethods.severity = none
+```
 
 If `UseDefaultExcludedMethods` is true, the following methods are excluded by default:
 "char.Equals",

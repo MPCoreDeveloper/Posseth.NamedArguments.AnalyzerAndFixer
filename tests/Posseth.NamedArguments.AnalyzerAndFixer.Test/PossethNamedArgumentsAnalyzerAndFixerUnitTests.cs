@@ -33,7 +33,7 @@ class Program
                     .WithSpan(8, 23, 8, 24)
                     .WithArguments("y", "Program.TestMethod"));
 
-            await test.RunAsync();
+            await test.RunAsync(TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -73,7 +73,7 @@ class Program
                     .WithSpan(8, 23, 8, 24)
                     .WithArguments("y", "Program.TestMethod"));
 
-            await test.RunAsync();
+            await test.RunAsync(TestContext.Current.CancellationToken);
         }
         
         [Fact]
@@ -101,7 +101,7 @@ class Program
             test.TestState.Sources.Add(testCode);
             test.TestState.ExpectedDiagnostics.AddRange(expectedDiagnostics);
 
-            await test.RunAsync();
+            await test.RunAsync(TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -135,7 +135,7 @@ class Program
             test.TestState.Sources.Add(testCode);
             test.TestState.ExpectedDiagnostics.AddRange(expectedDiagnostics);
 
-            await test.RunAsync();
+            await test.RunAsync(TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -179,7 +179,7 @@ class Program
                     .WithSpan(8, 26, 8, 27)
                     .WithArguments("z", "Program.TestMethod"));
 
-            await test.RunAsync();
+            await test.RunAsync(TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -220,7 +220,7 @@ class Program
             test.FixedState.Sources.Add(fixedCode);
             test.TestState.ExpectedDiagnostics.AddRange(expectedDiagnostics);
 
-            await test.RunAsync();
+            await test.RunAsync(TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -241,7 +241,7 @@ class Program
             test.TestState.Sources.Add(testCode);
             // No expected diagnostics
 
-            await test.RunAsync();
+            await test.RunAsync(TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -282,7 +282,7 @@ class Program
             test.TestState.Sources.Add(testCode);
             test.TestState.ExpectedDiagnostics.AddRange(expectedDiagnostics);
 
-            await test.RunAsync();
+            await test.RunAsync(TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -325,7 +325,7 @@ class Program
             test.FixedState.Sources.Add(fixedCode);
             test.TestState.ExpectedDiagnostics.AddRange(expectedDiagnostics);
 
-            await test.RunAsync();
+            await test.RunAsync(TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -356,7 +356,7 @@ class Program
             var test = new CSharpAnalyzerTest<NamedArgumentsAnalyzer, DefaultVerifier>();
             test.TestState.Sources.Add(testCode);
             test.TestState.ExpectedDiagnostics.Add(expected);
-            await test.RunAsync();
+            await test.RunAsync(TestContext.Current.CancellationToken);
         }
     }   
 }

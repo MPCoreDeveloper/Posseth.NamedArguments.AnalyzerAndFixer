@@ -13,6 +13,10 @@ This is a Roslyn analyzer and code fix provider that enforces the use of named a
 - **Record Support**: Optional mode to only analyze record types.
 
 ## Update notes
+- **v1.2.0** - 2026-08-24
+- The diagnostic message now shows the fully qualified method path, e.g. `Argument 'navigationPropertyPath' in method 'Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.Include' should be named`.
+- The `.editorconfig` options (`OnlyForRecords`, `ExcludedMethodNames`, `UseDefaultExcludedMethods`) are now correctly applied by the analyzer.
+- Added analyzer/fixer tests for extension-method invocations (EF Core `Include` style) and exclusion by fully qualified extension-method names.
 - **v1.1.9** - 2025-06-15
 - Refreshed NuGet package metadata and release assets.
 - Validated the analyzer package for .NET 10 and Visual Studio 2026.
@@ -66,9 +70,13 @@ The analyzer supports several configuration options via `.editorconfig` files.
 
 ### Options
 
+The analyzer reads the following options from the `dotnet_diagnostic.PNA1000.*` keys in your `.editorconfig` file:
+
 - **OnlyForRecords** (boolean, default: false): If true, only analyzes method calls on record types.
 - **UseDefaultExcludedMethods** (boolean, default: true): If true, uses the built-in list of excluded methods.
 - **ExcludedMethodNames** (string, default: ""): Comma-separated list of additional method names to exclude.
+
+> **Note:** `UseDefaultExcludedMethods` and `ExcludedMethodNames` are **not mutually exclusive** — they are combined. When `UseDefaultExcludedMethods` is `true`, the built-in list is merged with your custom `ExcludedMethodNames` entries to form the complete set of exclusions.
 
 If `UseDefaultExcludedMethods` is true, the following methods are excluded by default:
 "char.Equals",
@@ -143,6 +151,22 @@ If `UseDefaultExcludedMethods` is true, the following methods are excluded by de
 "Enumerable.Count",
 "Enumerable.Last",
 "Enumerable.LastOrDefault"
+
+### Excluding extension methods
+
+To exclude an extension method, provide its fully qualified name: the full namespace, the static class that declares the method, and the method name. For example, to exclude EF Core's `Include` extension method:
+
+```ini
+dotnet_diagnostic.PNA1000.ExcludedMethodNames = Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.Include
+```
+
+You can exclude several methods with a comma-separated list:
+
+```ini
+dotnet_diagnostic.PNA1000.ExcludedMethodNames = Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.Include,System.Linq.Enumerable.Select,My.Custom.Extensions.MyExtension
+```
+
+Both plain fully qualified names and `global::`-prefixed names (e.g. `global::Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.Include`) are accepted.
 
 ### Configuration Methods
 

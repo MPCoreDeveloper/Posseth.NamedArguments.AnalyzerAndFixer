@@ -119,7 +119,7 @@ class Program
 dotnet_analyzer_diagnostic.severity = warning
 "));
 
-            await test.RunAsync(TestContext.Current.CancellationToken);
+            await test.AssertTestPassesAsync(TestContext.Current.CancellationToken);
         }
     }
 }

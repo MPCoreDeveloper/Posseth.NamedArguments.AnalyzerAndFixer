@@ -44,7 +44,7 @@ namespace System.Runtime.CompilerServices
             test.TestState.ExpectedDiagnostics.Add(
                 DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId).WithSpan(10, 41, 10, 43).WithArguments("Age", "Program.Person..ctor"));
 
-            await test.RunAsync(TestContext.Current.CancellationToken);
+            await test.AssertTestPassesAsync(TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -71,7 +71,7 @@ dotnet_diagnostic.PNA1000_Info.severity = none
 dotnet_diagnostic.PNA1000_DefaultMethods.severity = none
 "));
 
-            await test.RunAsync(TestContext.Current.CancellationToken);
+            await test.AssertTestPassesAsync(TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -111,7 +111,7 @@ dotnet_diagnostic.PNA1000_DefaultMethods.severity = none
             test.TestState.ExpectedDiagnostics.Add(
                 DiagnosticResult.CompilerWarning(NamedArgumentsAnalyzer.DiagnosticId).WithSpan(10, 41, 10, 43).WithArguments("Age", "Program.Person..ctor"));
 
-            await test.RunAsync(TestContext.Current.CancellationToken);
+            await test.AssertTestPassesAsync(TestContext.Current.CancellationToken);
         }
     }
 }

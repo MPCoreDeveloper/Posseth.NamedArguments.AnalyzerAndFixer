@@ -44,7 +44,7 @@ class Program
                     .WithSpan(18, 28, 18, 40)
                     .WithArguments("navigationPropertyPath", "MyExtensions.QueryExtensions.Include"));
 
-            await test.RunAsync(TestContext.Current.CancellationToken);
+            await test.AssertTestPassesAsync(TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -80,7 +80,7 @@ class Program
                     .WithSpan(18, 28, 18, 40)
                     .WithArguments("navigationPropertyPath", "MyExtensions.QueryExtensions.Include"));
 
-            await test.RunAsync(TestContext.Current.CancellationToken);
+            await test.AssertTestPassesAsync(TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -94,7 +94,7 @@ dotnet_diagnostic.PNA1000.ExcludedMethodNames = MyExtensions.QueryExtensions.Inc
 dotnet_diagnostic.PNA1000_Info.severity = none
 dotnet_diagnostic.PNA1000_DefaultMethods.severity = none
 "));
-            await test.RunAsync(TestContext.Current.CancellationToken);
+            await test.AssertTestPassesAsync(TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -108,7 +108,7 @@ dotnet_diagnostic.PNA1000.ExcludedMethodNames = global::MyExtensions.QueryExtens
 dotnet_diagnostic.PNA1000_Info.severity = none
 dotnet_diagnostic.PNA1000_DefaultMethods.severity = none
 "));
-            await test.RunAsync(TestContext.Current.CancellationToken);
+            await test.AssertTestPassesAsync(TestContext.Current.CancellationToken);
         }
     }
 }

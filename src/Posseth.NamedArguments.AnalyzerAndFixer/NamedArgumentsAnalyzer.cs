@@ -4,6 +4,7 @@
 //Extra options and record fix 
 using System;
 using System.Linq;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -94,7 +95,7 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
         }
 
         // Common methods to exclude by default (in addition to user-specified ones)
-        private readonly HashSet<string> DefaultExcludedMethods = new HashSet<string>
+        private static readonly HashSet<string> DefaultExcludedMethods = new HashSet<string>
         {
 "char.Equals",
 "char.CompareTo",
@@ -196,19 +197,19 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             context.RegisterSyntaxNodeAction(AnalyzeObjectCreation, SyntaxKind.ObjectCreationExpression);
         }
 
-        private void AnalyzeSyntaxTree(SyntaxTreeAnalysisContext context)
+        private static void AnalyzeSyntaxTree(SyntaxTreeAnalysisContext context)
         {
             // Attach to the root of the tree so it appears once per file
             var settings = AnalyzerSettings.From(context.Options.AnalyzerConfigOptionsProvider.GetOptions(context.Tree));
-            ReportInfoDiagnostic(context.Tree.GetRoot().GetLocation(), context.ReportDiagnostic, settings);
+            ReportInfoDiagnostic(context.Tree.GetRoot(context.CancellationToken).GetLocation(), context.ReportDiagnostic, settings);
         }
 
-        private void AnalyzeInvocation(SyntaxNodeAnalysisContext context)
+        private static void AnalyzeInvocation(SyntaxNodeAnalysisContext context)
         {
             var invocation = (InvocationExpressionSyntax)context.Node;
             var settings = AnalyzerSettings.From(context.Options.AnalyzerConfigOptionsProvider.GetOptions(invocation.SyntaxTree));
 
-            if (!(context.SemanticModel.GetSymbolInfo(invocation).Symbol is IMethodSymbol methodSymbol))
+            if (!(context.SemanticModel.GetSymbolInfo(invocation, context.CancellationToken).Symbol is IMethodSymbol methodSymbol))
                 return;
 
             // Check if the method is excluded (pass methodSymbol for full name check)
@@ -218,7 +219,7 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             // If OnlyForRecords is enabled, check if the containing type is a record
             if (settings.OnlyForRecords)
             {
-                var containingType = GetContainingType(invocation, context.SemanticModel);
+                var containingType = GetContainingType(invocation, context.SemanticModel, context.CancellationToken);
                 bool isRecord = containingType != null && IsRecord(containingType);
 
                 if (!isRecord)
@@ -227,28 +228,19 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
 
             var methodFullName = GetFullMethodName(methodSymbol);
 
-            // Analyze the arguments
-            foreach (var arg in invocation.ArgumentList.Arguments)
-            {
-                if (arg.NameColon == null)
-                {
-                    // Get parameter for this argument to include in diagnostic message
-                    string paramName = GetParameterName(arg, invocation, methodSymbol, context.SemanticModel);
-                    if (!string.IsNullOrEmpty(paramName))
-                    {
-                        var diagnostic = Diagnostic.Create(Rule, arg.GetLocation(), paramName, methodFullName);
-                        context.ReportDiagnostic(diagnostic);
-                    }
-                }
-            }
+            ReportUnnamedArguments(
+                invocation.ArgumentList,
+                methodFullName,
+                arg => GetParameterName(arg, invocation, methodSymbol),
+                context.ReportDiagnostic);
         }
 
-        private void AnalyzeObjectCreation(SyntaxNodeAnalysisContext context)
+        private static void AnalyzeObjectCreation(SyntaxNodeAnalysisContext context)
         {
             var objectCreation = (ObjectCreationExpressionSyntax)context.Node;
             var settings = AnalyzerSettings.From(context.Options.AnalyzerConfigOptionsProvider.GetOptions(objectCreation.SyntaxTree));
             
-            if (!(context.SemanticModel.GetSymbolInfo(objectCreation).Symbol is IMethodSymbol constructorSymbol))
+            if (!(context.SemanticModel.GetSymbolInfo(objectCreation, context.CancellationToken).Symbol is IMethodSymbol constructorSymbol))
                 return;
                 
             // Check if the method is excluded (pass constructorSymbol for full name check)
@@ -268,27 +260,42 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             
             var ctorFullName = GetFullMethodName(constructorSymbol);
 
-            // Analyze the arguments
-            if (objectCreation.ArgumentList != null)
+            ReportUnnamedArguments(
+                objectCreation.ArgumentList,
+                ctorFullName,
+                arg => GetParameterNameForConstructor(arg, objectCreation, constructorSymbol),
+                context.ReportDiagnostic);
+        }
+
+        /// <summary>
+        /// Reports the analyzer's rule for every argument without a name colon in the given
+        /// argument list, using the supplied parameter-name resolver.
+        /// </summary>
+        private static void ReportUnnamedArguments(
+            ArgumentListSyntax argumentList,
+            string methodFullName,
+            Func<ArgumentSyntax, string> getParameterName,
+            Action<Diagnostic> reportDiagnostic)
+        {
+            if (argumentList == null)
+                return;
+
+            foreach (var arg in argumentList.Arguments)
             {
-                foreach (var arg in objectCreation.ArgumentList.Arguments)
+                if (arg.NameColon == null)
                 {
-                    if (arg.NameColon == null)
+                    // Get parameter for this argument to include in diagnostic message
+                    string paramName = getParameterName(arg);
+                    if (!string.IsNullOrEmpty(paramName))
                     {
-                        // Get parameter for this argument to include in diagnostic message
-                        string paramName = GetParameterNameForConstructor(arg, objectCreation, constructorSymbol, context.SemanticModel);
-                        if (!string.IsNullOrEmpty(paramName))
-                        {
-                            var diagnostic = Diagnostic.Create(Rule, arg.GetLocation(), paramName, ctorFullName);
-                            context.ReportDiagnostic(diagnostic);
-                        }
+                        reportDiagnostic(Diagnostic.Create(Rule, arg.GetLocation(), paramName, methodFullName));
                     }
                 }
             }
         }
 
         private static string GetParameterNameForConstructor(ArgumentSyntax arg, ObjectCreationExpressionSyntax objectCreation, 
-            IMethodSymbol constructorSymbol, SemanticModel semanticModel)
+            IMethodSymbol constructorSymbol)
         {
             int argIndex = objectCreation.ArgumentList.Arguments.IndexOf(arg);
             if (argIndex < constructorSymbol.Parameters.Length)
@@ -302,7 +309,7 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
         /// Reports an info diagnostic to inform the user about the current analyzer options.
         /// Reported once per syntax tree via <see cref="SyntaxTreeAnalysisContext"/>.
         /// </summary>
-        private void ReportInfoDiagnostic(Location location, Action<Diagnostic> reportDiagnostic, AnalyzerSettings settings)
+        private static void ReportInfoDiagnostic(Location location, Action<Diagnostic> reportDiagnostic, AnalyzerSettings settings)
         {
             // Only surface the options info diagnostics when the analyzer configuration has actually
             // been customized. With all-default settings there is nothing meaningful to report and
@@ -337,7 +344,7 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             }
         }
 
-        private static string GetParameterName(ArgumentSyntax arg, InvocationExpressionSyntax invocation, IMethodSymbol methodSymbol, SemanticModel semanticModel)
+        private static string GetParameterName(ArgumentSyntax arg, InvocationExpressionSyntax invocation, IMethodSymbol methodSymbol)
         {
             int argIndex = invocation.ArgumentList.Arguments.IndexOf(arg);
             if (argIndex < methodSymbol.Parameters.Length)
@@ -347,10 +354,10 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             return arg.Expression.ToString();
         }
 
-        private static INamedTypeSymbol GetContainingType(InvocationExpressionSyntax invocation, SemanticModel semanticModel)
+        private static INamedTypeSymbol GetContainingType(InvocationExpressionSyntax invocation, SemanticModel semanticModel, CancellationToken cancellationToken)
         {
             // Get the method symbol from the invocation
-            var methodSymbol = semanticModel.GetSymbolInfo(invocation).Symbol as IMethodSymbol;
+            var methodSymbol = semanticModel.GetSymbolInfo(invocation, cancellationToken).Symbol as IMethodSymbol;
             if (methodSymbol == null)
                 return null;
                 
@@ -371,31 +378,55 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             return methodSymbol.ContainingType;
         }
 
-        private bool IsMethodExcluded(string methodName, IMethodSymbol methodSymbol, AnalyzerSettings settings)
+        private static bool IsMethodExcluded(string methodName, IMethodSymbol methodSymbol, AnalyzerSettings settings)
         {
             if (string.IsNullOrEmpty(methodName))
                 return false;
 
             // Check default excluded methods (by fully qualified name) if enabled
-            if (settings.UseDefaultExcludedMethods && methodSymbol != null)
-            {
-                var fullName = GetFullMethodName(methodSymbol); // e.g., System.Linq.Enumerable.Where
+            if (settings.UseDefaultExcludedMethods && IsExcludedByDefault(methodSymbol))
+                return true;
 
-                // also build minimally qualified and simple variants to match list entries
-                var minimalType = methodSymbol.ContainingType?.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat) ?? string.Empty; // e.g., Enumerable
-                var minimalFull = string.IsNullOrEmpty(minimalType) ? methodSymbol.Name : minimalType + "." + methodSymbol.Name; // e.g., Enumerable.Where
-                var simpleType = methodSymbol.ContainingType?.Name ?? string.Empty; // e.g., Enumerable
-                var simpleFull = string.IsNullOrEmpty(simpleType) ? methodSymbol.Name : simpleType + "." + methodSymbol.Name; // e.g., Enumerable.Where
+            // Check the user-configured exclusion list (allows simple and fully qualified names)
+            if (IsExcludedByConfiguredNames(methodName, methodSymbol, settings.ExcludedMethodNames))
+                return true;
 
-                if (DefaultExcludedMethods.Contains(fullName) || DefaultExcludedMethods.Contains(minimalFull) || DefaultExcludedMethods.Contains(simpleFull))
-                    return true;
-            }
+            return false;
+        }
 
-            if (string.IsNullOrEmpty(settings.ExcludedMethodNames))
+        /// <summary>
+        /// Checks <see cref="DefaultExcludedMethods"/> using the fully qualified, minimally
+        /// qualified and simple (type-only) forms of the method name.
+        /// </summary>
+        private static bool IsExcludedByDefault(IMethodSymbol methodSymbol)
+        {
+            if (methodSymbol == null)
+                return false;
+
+            var fullName = GetFullMethodName(methodSymbol); // e.g., System.Linq.Enumerable.Where
+
+            // also build minimally qualified and simple variants to match list entries
+            var minimalType = methodSymbol.ContainingType?.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat) ?? string.Empty; // e.g., Enumerable
+            var minimalFull = string.IsNullOrEmpty(minimalType) ? methodSymbol.Name : minimalType + "." + methodSymbol.Name; // e.g., Enumerable.Where
+            var simpleType = methodSymbol.ContainingType?.Name ?? string.Empty; // e.g., Enumerable
+            var simpleFull = string.IsNullOrEmpty(simpleType) ? methodSymbol.Name : simpleType + "." + methodSymbol.Name; // e.g., Enumerable.Where
+
+            return DefaultExcludedMethods.Contains(fullName)
+                || DefaultExcludedMethods.Contains(minimalFull)
+                || DefaultExcludedMethods.Contains(simpleFull);
+        }
+
+        /// <summary>
+        /// Checks the user-configured exclusion list (from <c>ExcludedMethodNames</c>) allowing
+        /// both simple (type) names and fully qualified (namespace.type.method) names.
+        /// </summary>
+        private static bool IsExcludedByConfiguredNames(string methodName, IMethodSymbol methodSymbol, string excludedMethodNames)
+        {
+            if (string.IsNullOrEmpty(excludedMethodNames))
                 return false;
 
             // Parse exclusion list: allow both simple and fully qualified names
-            var excludedMethods = settings.ExcludedMethodNames
+            var excludedMethods = excludedMethodNames
                 .Split(separator, StringSplitOptions.RemoveEmptyEntries)
                 .Select(m => m.Trim())
                 .Select(StripGlobalPrefix) // remove optional global:: prefix if given
@@ -409,8 +440,7 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
             // Check for fully qualified name (Namespace.Type.Method)
             if (methodSymbol != null)
             {
-                var fullName = GetFullMethodName(methodSymbol);
-                if (excludedMethods.Contains(fullName))
+                if (excludedMethods.Contains(GetFullMethodName(methodSymbol)))
                     return true;
 
                 // also check minimally qualified

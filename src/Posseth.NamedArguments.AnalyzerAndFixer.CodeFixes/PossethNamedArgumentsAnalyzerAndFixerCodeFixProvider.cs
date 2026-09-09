@@ -38,7 +38,7 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
                 diagnostic);
         }
 
-        private async Task<Document> UseNamedArgumentAsync(Document document, ArgumentSyntax argument, CancellationToken cancellationToken)
+        private static async Task<Document> UseNamedArgumentAsync(Document document, ArgumentSyntax argument, CancellationToken cancellationToken)
         {
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
@@ -66,11 +66,11 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
 
             if (invocation is InvocationExpressionSyntax invocationExpr)
             {
-                methodSymbol = semanticModel.GetSymbolInfo(invocationExpr).Symbol as IMethodSymbol;
+                methodSymbol = semanticModel.GetSymbolInfo(invocationExpr, cancellationToken).Symbol as IMethodSymbol;
             }
             else if (invocation is ObjectCreationExpressionSyntax creationExpr)
             {
-                methodSymbol = semanticModel.GetSymbolInfo(creationExpr).Symbol as IMethodSymbol;
+                methodSymbol = semanticModel.GetSymbolInfo(creationExpr, cancellationToken).Symbol as IMethodSymbol;
             }
 
             if (methodSymbol == null)
@@ -112,7 +112,7 @@ namespace Posseth.NamedArguments.AnalyzerAndFixer
         }
 
         // Helper method to find a corresponding node in a new syntax tree
-        private ArgumentSyntax FindCorrespondingNode(SyntaxNode root, ArgumentSyntax originalNode)
+        private static ArgumentSyntax FindCorrespondingNode(SyntaxNode root, ArgumentSyntax originalNode)
         {
             // Find the node at the same position
             var nodeAtSamePosition = root.FindNode(originalNode.Span);

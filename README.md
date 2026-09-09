@@ -1,6 +1,7 @@
 # Posseth NamedArguments AnalyzerAndFixer
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MPCoreDeveloper?style=for-the-badge&logo=github&label=Sponsor)](https://github.com/sponsors/MPCoreDeveloper)
+[![NuGet](https://img.shields.io/nuget/v/Posseth.NamedArguments.AnalyzerAndFixer?style=for-the-badge&logo=nuget&label=NuGet)](https://www.nuget.org/packages/Posseth.NamedArguments.AnalyzerAndFixer)
 
 This is a Roslyn analyzer and code fix provider that enforces the use of named arguments in C# method calls and object creations. It helps improve code readability by requiring named arguments for methods with multiple parameters, while allowing exclusions for commonly used methods where positional arguments are preferred.
 
@@ -41,6 +42,30 @@ Or search for `Posseth.NamedArguments.AnalyzerAndFixer` in the NuGet Package Man
 1. Clone the repository.
 2. Build the project.
 3. Reference the analyzer DLLs in your project or use the VSIX for Visual Studio integration.
+
+## Publishing to NuGet
+
+A [GitHub Actions workflow](.github/workflows/publish-nuget.yml) builds the package, runs the tests and publishes it to [nuget.org](https://www.nuget.org) automatically.
+
+### Required secret
+
+Add a repository secret named `NUGET_API_KEY` with a [nuget.org API key](https://www.nuget.org/account/apikeys) (repository **Settings → Secrets and variables → Actions**). The workflow only uses it to push the package and never logs it.
+
+### Triggering a release
+
+**Tag push (recommended).** The package version is derived from the tag (`v1.3.0` → `1.3.0`):
+
+```bash
+git tag v1.3.0
+git push origin v1.3.0
+```
+
+**Manual run.** Use **Actions → Publish to NuGet → Run workflow**, optionally providing:
+- `version` – override the package version;
+- `suffix` – a prerelease suffix (e.g. `beta1` produces `1.3.0-beta1`);
+- `dry-run` – build/test/validate without pushing.
+
+Already-published versions are skipped automatically (`--skip-duplicate`), so re-running a release is safe.
 
 ## Usage
 
